@@ -22,7 +22,7 @@ async function startGame(
   const [gameId] = txReceipt.events?.find((event) => event.event === 'GameStarted')?.args as [
     BigNumber,
     string,
-    string
+    string,
   ];
   return gameId;
 }
