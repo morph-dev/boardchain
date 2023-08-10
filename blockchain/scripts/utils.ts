@@ -1,4 +1,4 @@
 const BOARD_VALUE = ['   ', ' X ', ' O '];
-const cellToString = (value: number) => BOARD_VALUE[value];
-const rowToString = (row: number[]) => row.map(cellToString).join('│');
-export const boardToString = (board: number[][]) => board.map(rowToString).join('\n───┼───┼───\n');
+const cellToString = (value: bigint) => BOARD_VALUE[Number(value)];
+const rowToString = (row: bigint[]) => row.map(cellToString).join('│');
+export const boardToString = (board: bigint[][]) => board.map(rowToString).join('\n───┼───┼───\n');
