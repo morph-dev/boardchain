@@ -1,100 +1,102 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.21;
 
 import "./GoTypes.sol";
 
+struct GroupSearchResult {
+    bool[][] group;
+    uint16 groupSize;
+    bool[3] hasAdjacentBoardState;
+}
+
 library GoLibrary {
-
-    enum GroupVisitStatus {
-        Unknown,
-        Group,
-        Opponent,
-        Free
-    }
-
-    function visitGroup(
+    function groupSearch(
         uint8 x,
         uint8 y,
-        BoardState[][] storage board
-    ) public returns (Coordinates[] memory group, uint16 numLiberties) {
-        uint8 boardSize = uint8(board.length);
+        GameFullState storage fullState,
+        function(uint8, uint8, GameFullState storage)
+            view
+            returns (BoardState) bs
+    ) internal view returns (GroupSearchResult memory result) {
+        uint8 boardSize = fullState.info.boardSize;
 
-        GroupVisitStatus[][] memory status = new GroupVisitStatus[][](boardSize);
+        result.group = new bool[][](boardSize);
         for (uint8 i = 0; i < boardSize; i++) {
-            status[i] = new GroupVisitStatus[](boardSize);
+            result.group[i] = new bool[](boardSize);
         }
 
-        uint16 groupSize;
-        (numLiberties, groupSize) = visitGroupInternal(x, y, board[x][y], board, status);
+        BoardState origin = bs(x, y, fullState);
 
-        group = new Coordinates[](groupSize);
-        uint16 g = 0;
-        for (uint8 gx = 0; gx < boardSize; gx++) {
-            for (uint8 gy = 0; gy < boardSize; gy++) {
-                if (status[gx][gy] == GroupVisitStatus.Group) {
-                    group[g] = Coordinates(gx, gy);
-                    g++;
-                }
+        groupSearchInternal(x, y, origin, fullState, bs, result);
+    }
+
+    function groupSearchInternal(
+        uint8 x,
+        uint8 y,
+        BoardState origin,
+        GameFullState storage fullState,
+        function(uint8, uint8, GameFullState storage)
+            view
+            returns (BoardState) bs,
+        GroupSearchResult memory result
+    ) private view {
+        // Do nothing if already visited
+        if (result.group[x][y]) {
+            return;
+        }
+
+        BoardState state = bs(x, y, fullState);
+
+        // Stop if not part of the group
+        if (state != origin) {
+            result.hasAdjacentBoardState[uint(state)] = true;
+            return;
+        }
+
+        result.group[x][y] = true;
+        result.groupSize++;
+
+        // Check neighbours
+
+        // Up
+        if (x > 0) {
+            groupSearchInternal(x - 1, y, origin, fullState, bs, result);
+        }
+        // Down
+        if (x + 1 < fullState.info.boardSize) {
+            groupSearchInternal(x + 1, y, origin, fullState, bs, result);
+        }
+        // Left
+        if (y > 0) {
+            groupSearchInternal(x, y - 1, origin, fullState, bs, result);
+        }
+        // Right
+        if (y + 1 < fullState.info.boardSize) {
+            groupSearchInternal(x, y + 1, origin, fullState, bs, result);
+        }
+    }
+
+    function playingBoardState(
+        uint8 x,
+        uint8 y,
+        GameFullState storage fullState
+    ) internal view returns (BoardState) {
+        return fullState.board[x][y];
+    }
+
+    function scoringBoardState(
+        uint8 x,
+        uint8 y,
+        GameFullState storage fullState
+    ) internal view returns (BoardState) {
+        BoardState state = fullState.board[x][y];
+        if (state != BoardState.Empty) {
+            ScoringBoardState scoringState = fullState.scoringState.board[x][y];
+            if (scoringState == ScoringBoardState.Dead) {
+                return BoardState.Empty;
             }
+            assert(scoringState == ScoringBoardState.Alive);
         }
-    }
-
-    function visitGroupInternal(
-        uint8 x,
-        uint8 y,
-        BoardState target,
-        BoardState[][] storage board,
-        GroupVisitStatus[][] memory status
-    ) internal returns (uint16 numLiberties, uint16 groupSize) {
-        uint8 boardSize = uint8(board.length);
-
-        uint16 adjacentLiberties = 0;
-        uint16 adjacentGroupSize = 0;
-
-        // up
-        if (x > 0 && status[x - 1][y] == GroupVisitStatus.Unknown) {
-            (adjacentLiberties, adjacentGroupSize) = visitAdjacent(x - 1, y, target, board, status);
-            numLiberties += adjacentLiberties;
-            groupSize += adjacentGroupSize;
-        }
-        // left
-        if (y > 0 && status[x][y - 1] == GroupVisitStatus.Unknown) {
-            (adjacentLiberties, adjacentGroupSize) = visitAdjacent(x, y - 1, target, board, status);
-            numLiberties += adjacentLiberties;
-            groupSize += adjacentGroupSize;
-        }
-        // down
-        if (x + 1 < boardSize && status[x + 1][y] == GroupVisitStatus.Unknown) {
-            (adjacentLiberties, adjacentGroupSize) = visitAdjacent(x + 1, y, target, board, status);
-            numLiberties += adjacentLiberties;
-            groupSize += adjacentGroupSize;
-        }
-        // right
-        if (y + 1 < boardSize && status[x][y + 1] == GroupVisitStatus.Unknown) {
-            (adjacentLiberties, adjacentGroupSize) = visitAdjacent(x, y + 1, target, board, status);
-            numLiberties += adjacentLiberties;
-            groupSize += adjacentGroupSize;
-        }
-    }
-
-    function visitAdjacent(
-        uint8 x,
-        uint8 y,
-        BoardState target,
-        BoardState[][] storage board,
-        GroupVisitStatus[][] memory status
-    ) private returns (uint16 numLiberties, uint16 groupSize) {
-        BoardState state = board[x][y];
-        if (state == BoardState.Empty) {
-            status[x][y] = GroupVisitStatus.Free;
-            numLiberties = 1;
-        }
-        if (state != target) {
-            status[x][y] = GroupVisitStatus.Opponent;
-            return (0, 0);
-        }
-        status[x][y] = GroupVisitStatus.Group;
-        (numLiberties, groupSize) = visitGroupInternal(x, y, target, board, status);
-        groupSize += 1;
+        return state;
     }
 }

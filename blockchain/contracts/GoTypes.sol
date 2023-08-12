@@ -1,10 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
-
-struct Coordinates {
-    uint8 x;
-    uint8 y;
-}
+pragma solidity ^0.8.21;
 
 enum Player {
     Black,
@@ -37,37 +32,43 @@ enum GamePhase {
     Finished
 }
 
-enum MoveType {
-    PlayStone,
-    Pass,
-    Resign
-}
-
 struct Move {
-    MoveType moveType;
     uint8 x;
     uint8 y;
+    bool isPass;
 }
 
 struct GameInfo {
     uint gameId;
     uint8 boardSize;
-    uint8 komi; // +0.5 implied
+    /// @notice Komi if favor of white. The +0.5 is implied
+    /// @dev The int16 is used to allow reverse komi
+    int16 komi;
     uint8 handicap;
-}
-
-struct KoInfo {
-    bool isKoPossible;
-    Coordinates lastMove;
-    Coordinates lastCapture;
 }
 
 struct PlayingState {
     uint numberOfMoves;
+    Move lastMove;
     Player currentPlayer;
-    KoInfo koInfo;
-    bool isLastMovePass;
-    uint[2] captures;
+    bool isKoPossible;
+    uint16[2] prisoners;
+}
+
+enum ScoringBoardState {
+    Unknown,
+    Neutral,
+    TerritoryBlack,
+    TerritoryWhite,
+    Dead,
+    Alive
+}
+
+struct ScoringState {
+    bool[2] accepted;
+    uint16[2] boardPrisoners;
+    uint16[2] territory;
+    ScoringBoardState[][] board;
 }
 
 struct GameFullState {
@@ -76,5 +77,6 @@ struct GameFullState {
     GamePhase phase;
     GameResult result;
     PlayingState playingState;
+    ScoringState scoringState;
     BoardState[][] board;
 }

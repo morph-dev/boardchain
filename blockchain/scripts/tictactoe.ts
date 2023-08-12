@@ -1,9 +1,13 @@
 import { ethers } from 'hardhat';
 import { TicTacToe, TicTacToe__factory } from '../typechain-types';
 import { CoordinatesStruct } from '../typechain-types/TicTacToe';
-import { boardToString } from './utils';
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 import { EventLog } from 'ethers';
+
+const BOARD_VALUE = ['   ', ' X ', ' O '];
+const cellToString = (value: bigint) => BOARD_VALUE[Number(value)];
+const rowToString = (row: bigint[]) => row.map(cellToString).join('│');
+export const boardToString = (board: bigint[][]) => board.map(rowToString).join('\n───┼───┼───\n');
 
 export async function deployTicTacToe() {
   const TicTacToe: TicTacToe__factory = await ethers.getContractFactory('TicTacToe');

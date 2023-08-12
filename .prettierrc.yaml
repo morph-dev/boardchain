@@ -5,9 +5,13 @@ tabWidth: 2
 useTabs: false
 semi: true
 singleQuote: true
+plugins:
+  - 'prettier-plugin-solidity'
 overrides:
   - files: '*.sol'
     options:
+      parser: 'solidity-parse'
+      printWidth: 80
       tabWidth: 4
       singleQuote: false
       bracketSpacing: false
