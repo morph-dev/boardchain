@@ -14,9 +14,9 @@ library GoLibrary {
         uint8 x,
         uint8 y,
         GameFullState storage fullState,
-        function(uint8, uint8, GameFullState storage)
+        function(GameFullState storage, uint8, uint8, BoardState)
             view
-            returns (BoardState) bs
+            returns (BoardState) stateFn
     ) internal view returns (GroupSearchResult memory result) {
         uint8 boardSize = fullState.info.boardSize;
 
@@ -25,9 +25,9 @@ library GoLibrary {
             result.group[i] = new bool[](boardSize);
         }
 
-        BoardState origin = bs(x, y, fullState);
+        BoardState origin = fullState.board[x][y];
 
-        groupSearchInternal(x, y, origin, fullState, bs, result);
+        groupSearchInternal(x, y, origin, fullState, stateFn, result);
     }
 
     function groupSearchInternal(
@@ -35,9 +35,9 @@ library GoLibrary {
         uint8 y,
         BoardState origin,
         GameFullState storage fullState,
-        function(uint8, uint8, GameFullState storage)
+        function(GameFullState storage, uint8, uint8, BoardState)
             view
-            returns (BoardState) bs,
+            returns (BoardState) stateFn,
         GroupSearchResult memory result
     ) private view {
         // Do nothing if already visited
@@ -45,7 +45,7 @@ library GoLibrary {
             return;
         }
 
-        BoardState state = bs(x, y, fullState);
+        BoardState state = stateFn(fullState, x, y, origin);
 
         // Stop if not part of the group
         if (state != origin) {
@@ -60,34 +60,49 @@ library GoLibrary {
 
         // Up
         if (x > 0) {
-            groupSearchInternal(x - 1, y, origin, fullState, bs, result);
+            groupSearchInternal(x - 1, y, origin, fullState, stateFn, result);
         }
         // Down
         if (x + 1 < fullState.info.boardSize) {
-            groupSearchInternal(x + 1, y, origin, fullState, bs, result);
+            groupSearchInternal(x + 1, y, origin, fullState, stateFn, result);
         }
         // Left
         if (y > 0) {
-            groupSearchInternal(x, y - 1, origin, fullState, bs, result);
+            groupSearchInternal(x, y - 1, origin, fullState, stateFn, result);
         }
         // Right
         if (y + 1 < fullState.info.boardSize) {
-            groupSearchInternal(x, y + 1, origin, fullState, bs, result);
+            groupSearchInternal(x, y + 1, origin, fullState, stateFn, result);
         }
     }
 
     function playingBoardState(
+        GameFullState storage fullState,
         uint8 x,
         uint8 y,
-        GameFullState storage fullState
+        BoardState
     ) internal view returns (BoardState) {
         return fullState.board[x][y];
     }
 
-    function scoringBoardState(
+    function deadAliveBoardState(
+        GameFullState storage fullState,
         uint8 x,
         uint8 y,
-        GameFullState storage fullState
+        BoardState origin
+    ) internal view returns (BoardState) {
+        BoardState state = fullState.board[x][y];
+        if (state == BoardState.Empty) {
+            return origin;
+        }
+        return state;
+    }
+
+    function territoryBoardState(
+        GameFullState storage fullState,
+        uint8 x,
+        uint8 y,
+        BoardState
     ) internal view returns (BoardState) {
         BoardState state = fullState.board[x][y];
         if (state != BoardState.Empty) {

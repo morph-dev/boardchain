@@ -385,7 +385,7 @@ library GoEngine {
                             x,
                             y,
                             fullState,
-                            GoLibrary.scoringBoardState
+                            GoLibrary.territoryBoardState
                         );
                     bool touchingBlack = groupSearch.hasAdjacentBoardState[
                         uint(BoardState.Black)
