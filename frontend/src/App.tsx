@@ -2,20 +2,32 @@ import { Box, ChakraProvider } from '@chakra-ui/react';
 import {
   createBrowserRouter,
   createRoutesFromElements,
+  Navigate,
   Outlet,
   Route,
   RouterProvider,
 } from 'react-router-dom';
 import WagmiProvider from './providers/WagmiProvider';
+import TopBar from './components/topbar/TopBar';
+import GoGamePage from './pages/go/game/GoGamePage';
+import GoLobbyPage from './pages/go/lobby/GoLobbyPage';
 
 const router = createBrowserRouter(
-  createRoutesFromElements(<Route path="/" element={<Layout />}></Route>)
+  createRoutesFromElements(
+    <Route path="/" element={<Layout />}>
+      <Route path="go">
+        <Route path="game/:gameId" loader={() => null} element={<GoGamePage />} />
+        <Route index path="games" element={<GoLobbyPage />} />
+      </Route>
+      <Route index element={<Navigate to="/go/games" />} />
+    </Route>
+  )
 );
 
 function Layout() {
   return (
     <Box h="100vh">
-      {/* <TopBar /> */}
+      <TopBar />
       <Box h="full">
         <Outlet />
       </Box>
