@@ -22,7 +22,7 @@
     "ecmaVersion": "latest",
     "sourceType": "module"
   },
-  "plugins": ["react", "react-hooks", "@typescript-eslint", "chakra-ui"],
+  "plugins": ["react", "react-hooks", "@typescript-eslint", "react-refresh"],
   "settings": {
     "react": {
       "version": "detect"
@@ -30,8 +30,6 @@
   },
   "ignorePatterns": ["src/generated/**"],
   "rules": {
-    "chakra-ui/props-order": "error",
-    "chakra-ui/props-shorthand": "error",
-    "chakra-ui/require-specific-component": "error"
+    "react-refresh/only-export-components": "warn"
   }
 }
