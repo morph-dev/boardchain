@@ -1,7 +1,7 @@
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 import { EventLog } from 'ethers';
 import { ethers } from 'hardhat';
-import { GoGame } from '../typechain-types';
+import { GoGame } from '../typechain-types/v0/GoGame';
 import { boardToString, scoringBoardToString } from './utils';
 
 export async function deployGo(): Promise<GoGame> {

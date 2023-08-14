@@ -80,3 +80,14 @@ struct GameFullState {
     ScoringState scoringState;
     BoardState[][] board;
 }
+
+struct GameSummary {
+    GameInfo info;
+    address[2] players;
+    GamePhase phase;
+    GameResult result;
+    // from PlayingState
+    uint numberOfMoves;
+    Player currentPlayer;
+    uint16[2] prisoners;
+}

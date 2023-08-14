@@ -1,3 +1,5 @@
+import { ContractTransactionResponse, EventLog } from 'ethers';
+
 const BOARD_VALUE = [' ·', '⚫', '⚪'];
 //﹢＋·＋⬤◯ ◉○●◎  •◦ ⦿ ⊚ ◎◉○⊙
 
@@ -28,4 +30,19 @@ export function scoringBoardToString(board: bigint[][], scoringBoard: bigint[][]
     row.map((value, column) => cellToString(value, rowIndex, column)).join('');
 
   return scoringBoard.map(rowToString).join('\n');
+}
+
+export async function getEvents(tx: ContractTransactionResponse): Promise<EventLog[]> {
+  const receipt = await tx.wait();
+  if (!receipt) {
+    return [];
+  }
+  return receipt.logs.filter((event): event is EventLog => 'eventName' in event);
+}
+
+export async function getEvent(
+  tx: ContractTransactionResponse,
+  eventName: string
+): Promise<EventLog | undefined> {
+  return getEvents(tx).then((events) => events.find((event) => event.eventName == eventName));
 }
