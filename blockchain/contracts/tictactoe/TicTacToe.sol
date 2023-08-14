@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.21;
 
-import "./Engine.sol";
-import "./Types.sol";
+import "./TicTacToeEngine.sol";
+import "./TicTacToeTypes.sol";
 
 /// @title The structure giving the summary of a game
 struct GameSummary {
@@ -22,7 +22,7 @@ struct GameSummary {
 
 /// @title Tha main contract for playing the TicTacToe
 contract TicTacToe {
-    using Engine for GameState;
+    using TicTacToeEngine for GameState;
 
     /// @notice Thrown when somebody other than `Lobby` is trying to start the
     /// game

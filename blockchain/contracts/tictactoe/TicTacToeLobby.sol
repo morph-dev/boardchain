@@ -22,7 +22,7 @@ struct PlayersGame {
 }
 
 /// @title The lobby for arrange the games
-contract Lobby {
+contract TicTacToeLobby {
     /// @notice Thrown when game is not found
     error ErrorGameNotFound();
     /// @notice Thrown when non-maker tries to revoke the game

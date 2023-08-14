@@ -1,5 +1,5 @@
 import { ethers } from 'hardhat';
-import { Lobby, TicTacToe } from '../typechain-types/tictactoe';
+import { TicTacToeLobby, TicTacToe } from '../typechain-types/tictactoe';
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 import { getEvent } from './utils';
 
@@ -19,14 +19,16 @@ async function printGame(ticTacToe: TicTacToe, gameId: bigint) {
   console.log(boardToString(board));
 }
 
-export async function deployTicTacToe(): Promise<[Lobby, TicTacToe]> {
-  const lobby = await ethers.deployContract('Lobby').then((lobby) => lobby.waitForDeployment());
+export async function deployTicTacToe(): Promise<[TicTacToeLobby, TicTacToe]> {
+  const lobby = await ethers
+    .deployContract('TicTacToeLobby')
+    .then((lobby) => lobby.waitForDeployment());
   const ticTacToe = await ethers.getContractAt('TicTacToe', await lobby.ticTacToe());
   return [lobby, ticTacToe];
 }
 
 async function startGame(
-  lobby: Lobby,
+  lobby: TicTacToeLobby,
   ticTacToe: TicTacToe,
   playerX: SignerWithAddress,
   playerO: SignerWithAddress

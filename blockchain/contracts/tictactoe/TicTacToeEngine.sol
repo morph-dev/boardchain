@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.21;
 
-import "./Types.sol";
+import "./TicTacToeTypes.sol";
 
 /// @title The game engine for the Tic-Tac-Toe game
-library Engine {
+library TicTacToeEngine {
     /// @notice Invalid players
     error InvalidPlayers();
     /// @notice When invalid move is attempted
