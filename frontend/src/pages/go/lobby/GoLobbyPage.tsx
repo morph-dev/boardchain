@@ -1,13 +1,11 @@
-import { HStack, VStack } from '@chakra-ui/react';
+import { VStack } from '@chakra-ui/react';
+import { StartGameButton } from '../StartGameButton';
 
 export default function GoLobbyPage() {
-  console.log('WTF');
   return (
     <VStack>
       <VStack align="stretch">
-        <HStack>
-          <div>GoLobbyPage</div>
-        </HStack>
+        <StartGameButton />
       </VStack>
     </VStack>
   );
