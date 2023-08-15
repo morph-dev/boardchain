@@ -1,102 +1,6 @@
-import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
-import { EventLog } from 'ethers';
 import { ethers } from 'hardhat';
-import { GoGame } from '../typechain-types/v0/GoGame';
-import { boardToString, scoringBoardToString } from './utils';
-
-export async function deployGo(): Promise<GoGame> {
-  const goFactory = await ethers.getContractFactory('GoGame');
-  const go = await goFactory.deploy().then((gg) => gg.waitForDeployment());
-  console.log('GoGame deployed to:', await go.getAddress());
-  return go;
-}
-
-async function printGame(go: GoGame, gameId: bigint) {
-  const { phase, result, board, playingState, scoringState } = await go.getGameState(gameId);
-  console.log('GameId:', gameId.toString(16));
-  console.log('Phase:', phase);
-  console.log('Prisoners:', Array.from(playingState.prisoners));
-  if (phase == 1n) {
-    console.log('Last move:', Array.from(playingState.lastMove));
-    console.log(boardToString(board));
-  }
-  if (phase == 2n) {
-    console.log('ScoringState:');
-    console.log('  accepted:', Array.from(scoringState.accepted));
-    console.log('  boardPrisoners:', Array.from(scoringState.boardPrisoners));
-    console.log('  territory:', Array.from(scoringState.territory));
-    console.log(scoringBoardToString(board, scoringState.board));
-  }
-  if (phase == 3n) {
-    console.log('Result', Array.from(result));
-    console.log(scoringBoardToString(board, scoringState.board));
-  }
-}
-
-async function startGame(
-  go: GoGame,
-  blackPlayer: SignerWithAddress,
-  whitePlayer: SignerWithAddress,
-  boardSize = 9,
-  komi = 6,
-  handicap = 0
-): Promise<bigint> {
-  const tx = await go.startGame(
-    blackPlayer.address,
-    whitePlayer.address,
-    boardSize,
-    komi,
-    handicap
-  );
-  const txReceipt = await tx.wait();
-
-  const gameId = txReceipt?.logs
-    .find((event): event is EventLog => 'eventName' in event && event.eventName === 'GameStarted')
-    ?.args.getValue('gameId');
-
-  printGame(go, gameId);
-
-  return gameId;
-}
-
-function playStone(go: GoGame, gameId: bigint, player: SignerWithAddress, x: number, y: number) {
-  return go
-    .connect(player)
-    .playStone(gameId, x, y)
-    .then((tx) => tx.wait())
-    .then(() => printGame(go, gameId));
-}
-
-function pass(go: GoGame, gameId: bigint, player: SignerWithAddress) {
-  return go
-    .connect(player)
-    .pass(gameId)
-    .then((tx) => tx.wait())
-    .then(() => printGame(go, gameId));
-}
-
-function markGroup(
-  go: GoGame,
-  gameId: bigint,
-  player: SignerWithAddress,
-  x: number,
-  y: number,
-  dead: boolean
-) {
-  return go
-    .connect(player)
-    .markGroup(gameId, x, y, dead)
-    .then((tx) => tx.wait())
-    .then(() => printGame(go, gameId));
-}
-
-function acceptScoring(go: GoGame, gameId: bigint, player: SignerWithAddress) {
-  return go
-    .connect(player)
-    .acceptScoring(gameId)
-    .then((tx) => tx.wait())
-    .then(() => printGame(go, gameId));
-}
+import { acceptScoring, markGroup, pass, playStone, startGame } from './goUtils';
+import { deployGo } from './setup';
 
 async function main() {
   const game =
@@ -104,7 +8,15 @@ async function main() {
   const go = await deployGo();
 
   const [blackPlayer, whitePlayer] = await ethers.getSigners();
-  const gameId = await startGame(go, blackPlayer, whitePlayer, 19, 6, 0);
+  const gameId = await startGame(
+    blackPlayer,
+    go,
+    blackPlayer.address,
+    whitePlayer.address,
+    19,
+    6,
+    0
+  );
 
   const moves = game.split(';');
   for (const move of moves) {
@@ -142,7 +54,15 @@ async function main2() {
   const go = await deployGo();
 
   const [blackPlayer, whitePlayer] = await ethers.getSigners();
-  const gameId = await startGame(go, blackPlayer, whitePlayer, 9, 6, 2);
+  const gameId = await startGame(
+    blackPlayer,
+    go,
+    blackPlayer.address,
+    whitePlayer.address,
+    9,
+    6,
+    2
+  );
   console.log('GameStarted:', gameId.toString(16));
 
   await playStone(go, gameId, whitePlayer, 1, 6);
