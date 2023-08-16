@@ -1,5 +1,6 @@
-import { HStack, Text, VStack, useToast } from '@chakra-ui/react';
+import { HStack, VStack, useToast } from '@chakra-ui/react';
 import { useParams } from 'react-router-dom';
+import GoBoard from './../components/board/GoBoard';
 import { useGoGameGetGameState, useGoGameStonePlayedEvent } from '../../../generated/blockchain';
 
 export default function GoGamePage() {
@@ -66,15 +67,7 @@ export default function GoGamePage() {
             Result: {gameState.result.result}
           </div>
         </HStack>
-        <div>
-          {gameState.board.map((r, ri) => (
-            <Text fontFamily="mono" key={ri}>
-              {r.map((v, vi) => (
-                <span key={vi}>{['· ', '⚫', '⚪'][v]}</span>
-              ))}
-            </Text>
-          ))}
-        </div>
+        <GoBoard gameState={gameState} />
       </VStack>
     </VStack>
   );

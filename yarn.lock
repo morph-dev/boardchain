@@ -377,6 +377,7 @@ __metadata:
     "@chakra-ui/system": ^2.6.0
     "@emotion/react": ^11.11.1
     "@emotion/styled": ^11.11.0
+    "@sabaki/shudan": ^1.7.1
     "@types/react": ^18.2.20
     "@types/react-dom": ^18.2.7
     "@typescript-eslint/eslint-plugin": ^6.3.0
@@ -3198,6 +3199,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@sabaki/shudan@npm:^1.7.1":
+  version: 1.7.1
+  resolution: "@sabaki/shudan@npm:1.7.1"
+  dependencies:
+    classnames: ^2.3.1
+  peerDependencies:
+    preact: ^8.4.2 || 10.x
+  checksum: 3a295143729503f0e701a66adabb539c7f272d42040ee2c5373d74abed3e1f0b787027e3713a04b5a3d0bef79cb1db7d90b1a187ad2cc0c316b2ce480e5765ec
+  languageName: node
+  linkType: hard
+
 "@safe-global/safe-apps-provider@npm:^0.17.1":
   version: 0.17.1
   resolution: "@safe-global/safe-apps-provider@npm:0.17.1"
@@ -5899,6 +5911,13 @@ __metadata:
     node-gyp: latest
     node-gyp-build: ^4.3.0
   checksum: 773da48aef52a041115d413fee8340b357a4da2eb505764f327183b155edd7cc9d24819eb4f707c83dbdae8588024f5dddeb322125567c59d5d1f6f16334cdb9
+  languageName: node
+  linkType: hard
+
+"classnames@npm:^2.3.1":
+  version: 2.3.2
+  resolution: "classnames@npm:2.3.2"
+  checksum: 2c62199789618d95545c872787137262e741f9db13328e216b093eea91c85ef2bfb152c1f9e63027204e2559a006a92eb74147d46c800a9f96297ae1d9f96f4e
   languageName: node
   linkType: hard
 
