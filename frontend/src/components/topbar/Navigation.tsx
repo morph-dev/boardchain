@@ -21,9 +21,8 @@ function Item({ to, children }: PropsWithChildren<ItemProps>) {
 export default function Navigation() {
   return (
     <HStack>
-      <HStack>
-        <Item to="/go/games">Go</Item>
-      </HStack>
+      <Item to="/tictactoe">Tic-Tac-Toe</Item>
+      <Item to="/go">Go</Item>
     </HStack>
   );
 }

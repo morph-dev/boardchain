@@ -2,7 +2,7 @@ import { GhostStone, Goban, Map, Marker, Vertex } from '@sabaki/shudan';
 import { useState } from 'react';
 import { ReadContractReturnType } from 'viem';
 import { goGameABI } from '../../../../generated/blockchain';
-import { BoardState, Player } from '../../types';
+import { BoardState, Coordinates, GamePhase, Player, ScoringBoardState } from '../../types';
 import { useAccount } from 'wagmi';
 
 enum SabakiSign {
@@ -11,7 +11,7 @@ enum SabakiSign {
   Black = 1,
 }
 
-function boardToSign(x: number): SabakiSign {
+function boardToSign(x: BoardState): SabakiSign {
   if (x === BoardState.Black) {
     return SabakiSign.Black;
   }
@@ -21,26 +21,48 @@ function boardToSign(x: number): SabakiSign {
   return SabakiSign.Empty;
 }
 
+function scoringStateToGhost(x: ScoringBoardState): GhostStone | null {
+  if (x === ScoringBoardState.TerritoryBlack) {
+    return { sign: SabakiSign.Black };
+  }
+  if (x === ScoringBoardState.TerritoryWhite) {
+    return { sign: SabakiSign.White };
+  }
+  return null;
+}
+
+function vertexToCoordinates(v: Vertex) {
+  return { x: v[1], y: v[0] };
+}
+
 type GoGamePageProps = {
   gameState: ReadContractReturnType<typeof goGameABI, 'getGameState'>;
-  onClick?: (x: number, y: number) => null;
+  pendingPass: boolean;
+  pendingMove: Coordinates | null;
+  onClick?: (c: Coordinates) => void;
 };
 
-export default function GoGamePage({ gameState, onClick }: GoGamePageProps) {
+export default function GoGamePage({
+  gameState,
+  pendingPass,
+  pendingMove,
+  onClick,
+}: GoGamePageProps) {
   const { address } = useAccount();
 
-  const [hover, setHover] = useState<{ x: number; y: number } | null>(null);
+  const [hover, setHover] = useState<Coordinates | null>(null);
 
   const board = gameState.board;
 
-  // TODO add info while in Scoring or finished state
-
   // Stones on the board (including dimmed one for next move)
   const signs: Map<SabakiSign> = board.map((row) => row.map(boardToSign));
-  // Last move
+  // Last move and captured stones
   const markers: Map<Marker | null> = board.map((row) => row.map(() => null));
   // Territory
-  const ghostStones: Map<GhostStone | null> = board.map((row) => row.map(() => null));
+  const ghostStones: Map<GhostStone | null> | undefined =
+    gameState.phase === GamePhase.Scoring || gameState.phase === GamePhase.Finished
+      ? gameState.scoringState.board.map((row) => row.map(scoringStateToGhost))
+      : undefined;
   // Next move and captured stones
   const dimmedVertices: Vertex[] = [];
 
@@ -51,12 +73,43 @@ export default function GoGamePage({ gameState, onClick }: GoGamePageProps) {
     };
   }
 
-  // Show next move
-  if (address && gameState.players[gameState.playingState.currentPlayer] === address) {
-    if (hover && signs[hover.x][hover.y] == SabakiSign.Empty) {
-      signs[hover.x][hover.y] =
-        gameState.playingState.currentPlayer === Player.Black ? SabakiSign.Black : SabakiSign.White;
-      dimmedVertices.push([hover.y, hover.x]);
+  // Show captured stones
+  if (gameState.phase === GamePhase.Scoring || gameState.phase === GamePhase.Finished) {
+    for (let x = 0; x < board.length; x++) {
+      for (let y = 0; y < board[x].length; y++) {
+        if (board[x][y] === BoardState.Empty) {
+          continue;
+        }
+        let dead = gameState.scoringState.board[x][y] === ScoringBoardState.Dead;
+        if (hover && gameState.phase === GamePhase.Scoring && hover.x == x && hover.y == y) {
+          dead = !dead;
+        }
+        if (dead) {
+          markers[x][y] = { type: 'point' };
+          dimmedVertices.push([y, x]);
+        }
+      }
+    }
+  }
+
+  // Show pending or next (hover) move
+  if (
+    address &&
+    gameState.players[gameState.playingState.currentPlayer] === address &&
+    !pendingPass
+  ) {
+    const sign =
+      gameState.playingState.currentPlayer === Player.Black ? SabakiSign.Black : SabakiSign.White;
+    if (pendingMove && board[pendingMove.x][pendingMove.y] == SabakiSign.Empty) {
+      // Show pending move
+      signs[pendingMove.x][pendingMove.y] = sign;
+      dimmedVertices.push([pendingMove.y, pendingMove.x]);
+    } else if (hover) {
+      if (gameState.phase === GamePhase.Playing && board[hover.x][hover.y] === SabakiSign.Empty) {
+        // Show next move
+        signs[hover.x][hover.y] = sign;
+        dimmedVertices.push([hover.y, hover.x]);
+      }
     }
   }
 
@@ -69,8 +122,8 @@ export default function GoGamePage({ gameState, onClick }: GoGamePageProps) {
         markerMap={markers}
         ghostStoneMap={ghostStones}
         dimmedVertices={dimmedVertices}
-        onVertexClick={(_, v) => onClick && onClick(v[1], v[0])}
-        onVertexPointerMove={(_, v) => setHover({ x: v[1], y: v[0] })}
+        onVertexClick={(_, v) => onClick && onClick(vertexToCoordinates(v))}
+        onVertexPointerMove={(_, v) => setHover(vertexToCoordinates(v))}
         onVertexPointerLeave={() => setHover(null)}
       />
     </>

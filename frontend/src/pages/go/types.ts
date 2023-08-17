@@ -32,3 +32,8 @@ export enum ScoringBoardState {
   Dead,
   Alive,
 }
+
+export type Coordinates = {
+  x: number;
+  y: number;
+};

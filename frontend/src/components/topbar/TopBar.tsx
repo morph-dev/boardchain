@@ -1,10 +1,10 @@
-import { Flex, Spacer } from '@chakra-ui/react';
+import { Flex, FlexProps, Spacer } from '@chakra-ui/react';
 import Account from './Account';
 import Navigation from './Navigation';
 
-export default function TopBar() {
+export default function TopBar(props: FlexProps) {
   return (
-    <Flex p={2}>
+    <Flex {...props}>
       <Navigation />
       <Spacer />
       <Account />
