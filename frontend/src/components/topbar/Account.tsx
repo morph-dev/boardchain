@@ -1,9 +1,9 @@
-import { Button, HStack, Text, useToast } from '@chakra-ui/react';
+import { Button, HStack, useToast } from '@chakra-ui/react';
 import { useCallback } from 'react';
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
-import { elliptAddress } from '../../utils/textUtils';
-import Chain from './Chain';
 import { useErrorHandler } from '../../hooks/useErrorHandler';
+import AddressWithCopy from '../AddressWithCopy';
+import Chain from './Chain';
 
 export default function Account() {
   const { address, isConnected } = useAccount();
@@ -37,7 +37,7 @@ export default function Account() {
 
   return (
     <HStack>
-      {address ? <Text fontFamily="mono">{elliptAddress(address)}</Text> : null}
+      {address && <AddressWithCopy address={address} />}
       <Chain />
       <Button onClick={() => disconnectAsync().catch(errorHandler('Disconnecting failed!'))}>
         Disconnect

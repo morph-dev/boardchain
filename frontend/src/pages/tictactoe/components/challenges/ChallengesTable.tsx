@@ -1,114 +1,15 @@
 import {
-  Button,
-  HStack,
   Table,
   TableCaption,
   TableContainer,
   TableContainerProps,
   Tbody,
-  Td,
-  Text,
   Th,
   Thead,
   Tr,
 } from '@chakra-ui/react';
-import { useCallback, useState } from 'react';
-import { Address, zeroAddress } from 'viem';
-import { prepareWriteContract, writeContract } from 'wagmi/actions';
-import { ticTacToeLobbyABI, ticTacToeLobbyAddress } from '../../../../generated/blockchain';
-import { useErrorHandler } from '../../../../hooks/useErrorHandler';
-import { useAppContext } from '../../../../providers/AppContext';
-import { elliptAddress } from '../../../../utils/textUtils';
 import { ChallengeGame } from '../../types';
-
-type ChallengeRowProps = {
-  challenge: ChallengeGame;
-  showMaker: boolean;
-  showTaker: boolean;
-};
-
-function ChallengeRow({ challenge, showMaker, showTaker }: ChallengeRowProps) {
-  const { chainId, userAddress } = useAppContext();
-  const errorHandler = useErrorHandler();
-
-  const [pending, setPending] = useState(false);
-
-  const onAccept = useCallback(() => {
-    setPending(true);
-    prepareWriteContract({
-      abi: ticTacToeLobbyABI,
-      address: ticTacToeLobbyAddress[chainId],
-      chainId: chainId,
-      functionName:
-        challenge.taker === zeroAddress ? 'acceptOpenChallenge' : 'acceptDirectChallenge',
-      args: [challenge.gameId],
-    })
-      .then(writeContract)
-      .catch(errorHandler('Error accepting the challenge!'))
-      .finally(() => setPending(false));
-  }, [chainId, challenge.gameId, challenge.taker, errorHandler]);
-
-  const onCancel = useCallback(() => {
-    setPending(true);
-    prepareWriteContract({
-      abi: ticTacToeLobbyABI,
-      address: ticTacToeLobbyAddress[chainId],
-      chainId: chainId,
-      functionName:
-        challenge.taker === zeroAddress ? 'cancelOpenChallenge' : 'cancelDirectChallenge',
-      args: [challenge.gameId],
-    })
-      .then(writeContract)
-      .catch(errorHandler('Error canceling the challenge!'))
-      .finally(() => setPending(false));
-  }, [chainId, challenge.gameId, challenge.taker, errorHandler]);
-
-  const formatPlayer = (address: Address, isX: boolean): string => {
-    const playOrder = `(plays ${isX ? 'first' : 'second'})`;
-    if (address === zeroAddress) {
-      return `? ${playOrder}`;
-    } else if (address === userAddress) {
-      return `me ${playOrder}`;
-    } else {
-      return `${elliptAddress(address)} ${playOrder}`;
-    }
-  };
-
-  const canAccept =
-    challenge.maker !== userAddress &&
-    (challenge.taker === userAddress || challenge.taker === zeroAddress);
-
-  const canCancel = challenge.maker === userAddress || challenge.taker === userAddress;
-
-  return (
-    <Tr>
-      {showMaker && (
-        <Td>
-          <Text fontFamily="mono">{formatPlayer(challenge.maker, challenge.makerIsX)}</Text>
-        </Td>
-      )}
-      {showTaker && (
-        <Td>
-          <Text fontFamily="mono">{formatPlayer(challenge.taker, !challenge.makerIsX)}</Text>
-        </Td>
-      )}
-      <Td>
-        <HStack justify="center">
-          {canAccept && (
-            <Button isLoading={pending} onClick={onAccept} colorScheme="green">
-              Accept
-            </Button>
-          )}
-          {canCancel && (
-            <Button isLoading={pending} onClick={onCancel} colorScheme="red">
-              Cancel
-            </Button>
-          )}
-        </HStack>
-      </Td>
-    </Tr>
-  );
-}
+import ChallengeRow from './ChallengeRow';
 
 export interface ChallengesTableProps extends TableContainerProps {
   challenges: readonly ChallengeGame[];
