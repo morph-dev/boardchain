@@ -3,12 +3,6 @@ pragma solidity ^0.8.21;
 
 import "./TicTacToe.sol";
 
-struct OpenGame {
-    uint gameId;
-    address maker;
-    bool makerIsX;
-}
-
 struct ChallengeGame {
     uint gameId;
     address maker;
@@ -16,30 +10,21 @@ struct ChallengeGame {
     bool makerIsX;
 }
 
-struct PlayersGame {
-    uint gameId;
-    bool canceled;
-}
-
 /// @title The lobby for arrange the games
 contract TicTacToeLobby {
     /// @notice Thrown when game is not found
     error ErrorGameNotFound();
-    /// @notice Thrown when non-maker tries to revoke the game
-    error ErrorNotMaker();
-    /// @notice Thrown when non-taker tries to accept the game
-    error ErrorNotTaker();
+    /// @notice Thrown when non-maker/taker tries to cancel the challenge
+    error ErrorNotAllowed();
+    /// @notice Thrown when players challenges himself
+    error ErrorSelfChallenge();
 
-    /// @notice Emitted when open game is created
-    event OpenGameCreated(uint gameId, address maker);
-    /// @notice Emitted when open game is revoked
-    event OpenGameRevoked(uint gameId);
     /// @notice Emitted when challenge is created
     event ChallengeCreated(uint gameId, address maker, address taker);
-    /// @notice Emitted when challenge is rejected
-    event ChallengeRejected(uint gameId);
-    /// @notice Emitted when challenge is revoked
-    event ChallengeRevoked(uint gameId);
+    /// @notice Emitted when challenge is canceled
+    event ChallengeCanceled(uint gameId);
+    /// @notice Emitted when challenge is accepted
+    event ChallengeAccepted(uint gameId);
 
     /// @notice The Contract for managing the actual games
     TicTacToe public immutable ticTacToe;
@@ -47,14 +32,10 @@ contract TicTacToeLobby {
     /// @notice Id used for creating unique gameIds
     uint private _id;
 
-    /// @notice All currently open games
-    OpenGame[] public openGames;
-
-    /// @notice The gameIds of challenges that player is pending to approve or
-    /// reject
-    mapping(address => uint[]) public pendingChallenges;
-    /// @notice The challenges that are pending
-    mapping(uint => ChallengeGame) public challengeGames;
+    /// @notice All currently open challenges
+    ChallengeGame[] public openChallenges;
+    /// @notice The challenges that player created or was challenged
+    mapping(address => ChallengeGame[]) public directChallenges;
 
     constructor() {
         ticTacToe = new TicTacToe(address(this));
@@ -62,188 +43,133 @@ contract TicTacToeLobby {
 
     // VIEWS
 
-    /// @notice Returns the number of open games
-    /// @return The number of open games
-    function numberOfOpenGames() public view returns (uint) {
-        return openGames.length;
+    /// @notice Returns the number of open challenges
+    /// @return The number of open challenges
+    function numberOfOpenChallenges() public view returns (uint) {
+        return openChallenges.length;
     }
 
-    /// @notice Returns all open games
-    /// @return All open games
-    function allOpenGames() public view returns (OpenGame[] memory) {
-        return openGames;
+    /// @notice Returns all open challenges
+    /// @return All open challenges
+    function allOpenChallenges() public view returns (ChallengeGame[] memory) {
+        return openChallenges;
     }
 
-    /// @notice Returns the number of challenges that are pending for a given
-    /// address
-    /// @param taker The taker of the challenges
-    /// @return The number of chellenges
-    function numberOfPendingChallenges(
-        address taker
+    /// @notice Returns the number direct challenges for a given player
+    /// @param player The player that is either a maker or a taker of a direct challenges
+    /// @return The number of direct challenges
+    function numberOfDirectChallenges(
+        address player
     ) public view returns (uint) {
-        return pendingChallenges[taker].length;
+        return directChallenges[player].length;
     }
 
-    /// @notice Returns challenges that are pending for a given address
-    /// @param taker The taker of the challenges
-    /// @return Pending challenges
-    function allPendingChallenges(
-        address taker
+    /// @notice Returns all direct challenges for a given player
+    /// @param player The player that is either a maker or a taker of a direct challenges
+    /// @return All direct challenges
+    function allDirectChallenges(
+        address player
     ) public view returns (ChallengeGame[] memory) {
-        uint[] storage gameIds = pendingChallenges[taker];
-        ChallengeGame[] memory games = new ChallengeGame[](gameIds.length);
-        for (uint i = 0; i < gameIds.length; i++) {
-            games[i] = challengeGames[gameIds[i]];
-        }
-        return games;
+        return directChallenges[player];
     }
 
     // ACTIONS
 
-    /// @notice Creates an open game that anybody can accept
+    /// @notice Creates a challenge
     /// @param playAsX Whether the maker is playing as X
+    /// @param taker If non-zero then only taker can accept this challenge
     /// @return The gameId of the created game
-    function proposeGame(bool playAsX) external returns (uint) {
-        uint gameId = nextGameId();
-
-        OpenGame storage game = openGames.push();
-        game.gameId = gameId;
-        game.maker = msg.sender;
-        game.makerIsX = playAsX;
-
-        emit OpenGameCreated(gameId, msg.sender);
-        return gameId;
-    }
-
-    /// @notice Accepts the open game with a given id
-    /// @param gameId The game id
-    function acceptGame(uint gameId) external {
-        for (uint256 i = 0; i < openGames.length; i++) {
-            if (openGames[i].gameId == gameId) {
-                if (openGames[i].makerIsX) {
-                    ticTacToe.startGame(gameId, openGames[i].maker, msg.sender);
-                } else {
-                    ticTacToe.startGame(gameId, msg.sender, openGames[i].maker);
-                }
-                openGames[i] = openGames[openGames.length - 1];
-                openGames.pop();
-                return;
-            }
-        }
-        revert ErrorGameNotFound();
-    }
-
-    /// @notice Revokes the open game with a given id
-    /// @param gameId The game id
-    function revokeGame(uint gameId) external {
-        for (uint256 i = 0; i < openGames.length; i++) {
-            if (openGames[i].gameId == gameId) {
-                if (openGames[i].maker != msg.sender) {
-                    revert ErrorNotMaker();
-                }
-                openGames[i] = openGames[openGames.length - 1];
-                openGames.pop();
-                emit OpenGameRevoked(gameId);
-                return;
-            }
-        }
-        revert ErrorGameNotFound();
-    }
-
-    /// @notice Creates a challenge for a game
-    /// @param playAsX Whether the maker is playing as X
-    /// @param taker The address of the challenged player
-    /// @return The gameId of the created game
-    function proposeChallenge(
+    function createChallenge(
         bool playAsX,
         address taker
     ) external returns (uint) {
         uint gameId = nextGameId();
+        if (msg.sender == taker) {
+            revert ErrorSelfChallenge();
+        }
 
-        pendingChallenges[taker].push(gameId);
-        challengeGames[gameId] = ChallengeGame(
+        ChallengeGame memory game = ChallengeGame(
             gameId,
             msg.sender,
             taker,
             playAsX
         );
 
+        if (taker == address(0)) {
+            openChallenges.push(game);
+        } else {
+            directChallenges[msg.sender].push(game);
+            directChallenges[taker].push(game);
+        }
+
         emit ChallengeCreated(gameId, msg.sender, taker);
         return gameId;
     }
 
-    /// @notice Accepts the challenge with a given id
-    /// @param gameId The game id
-    function acceptChallenge(uint gameId) external {
-        ChallengeGame memory game = challengeGames[gameId];
-        if (game.gameId != gameId) {
-            revert ErrorGameNotFound();
-        }
-        if (game.taker != msg.sender) {
-            revert ErrorNotTaker();
-        }
-
-        if (game.makerIsX) {
-            ticTacToe.startGame(gameId, game.maker, game.taker);
-        } else {
-            ticTacToe.startGame(gameId, game.taker, game.maker);
-        }
-
-        uint[] storage allChallenges = pendingChallenges[msg.sender];
-        for (uint256 i = 0; i < allChallenges.length; i++) {
-            if (allChallenges[i] == gameId) {
-                allChallenges[i] = allChallenges[allChallenges.length - 1];
-                allChallenges.pop();
-                break;
+    /// @notice Accept the open challenge
+    /// @param gameId The id of the game
+    function acceptOpenChallenge(uint gameId) external {
+        for (uint i = 0; i < openChallenges.length; i++) {
+            if (gameId == openChallenges[i].gameId) {
+                acceptChallenge(openChallenges[i]);
+                removeFromList(openChallenges, i);
+                return;
             }
         }
-        delete challengeGames[gameId];
+        revert ErrorGameNotFound();
     }
 
-    /// @notice Reject the challenge with a given id
-    /// @param gameId The game id
-    function rejectChallenge(uint gameId) external {
-        ChallengeGame memory game = challengeGames[gameId];
-        if (game.gameId != gameId) {
-            revert ErrorGameNotFound();
-        }
-        if (game.taker != msg.sender) {
-            revert ErrorNotTaker();
-        }
-        uint[] storage challenges = pendingChallenges[msg.sender];
-        for (uint256 i = 0; i < challenges.length; i++) {
-            if (challenges[i] == gameId) {
-                challenges[i] = challenges[challenges.length - 1];
-                challenges.pop();
-                break;
+    /// @notice Cancel the open challenge
+    /// @param gameId The id of the game
+    function cancelOpenChallenge(uint gameId) external {
+        for (uint i = 0; i < openChallenges.length; i++) {
+            if (gameId == openChallenges[i].gameId) {
+                if (openChallenges[i].maker != msg.sender) {
+                    revert ErrorNotAllowed();
+                }
+                removeFromList(openChallenges, i);
+                emit ChallengeCanceled(gameId);
+                return;
             }
         }
-        delete challengeGames[gameId];
-        emit ChallengeRejected(gameId);
+        revert ErrorGameNotFound();
     }
 
-    /// @notice Revokes the challenge with a given id
-    /// @param gameId The game id
-    function revokeChallenge(uint gameId) external {
-        ChallengeGame memory game = challengeGames[gameId];
-        if (game.gameId != gameId) {
-            revert ErrorGameNotFound();
-        }
-        if (game.maker != msg.sender) {
-            revert ErrorNotMaker();
-        }
-        uint[] storage takersChallenges = pendingChallenges[game.taker];
-        for (uint256 i = 0; i < takersChallenges.length; i++) {
-            if (takersChallenges[i] == gameId) {
-                takersChallenges[i] = takersChallenges[
-                    takersChallenges.length - 1
-                ];
-                takersChallenges.pop();
-                break;
+    /// @notice Accept the direct challenge
+    /// @param gameId The id of the game
+    function acceptDirectChallenge(uint gameId) external {
+        ChallengeGame[] storage challenges = directChallenges[msg.sender];
+        for (uint i = 0; i < challenges.length; i++) {
+            if (gameId == challenges[i].gameId) {
+                ChallengeGame memory game = challenges[i];
+
+                // This will also check that msg.sender is the taker
+                acceptChallenge(game);
+
+                removeFromList(challenges, i);
+                (bool found, ) = removeDirectChallenge(game.maker, gameId);
+                assert(found);
+
+                return;
             }
         }
-        delete challengeGames[gameId];
-        emit ChallengeRevoked(gameId);
+        revert ErrorGameNotFound();
+    }
+
+    /// @notice Cancel the direct challenge
+    /// @param gameId The id of the game
+    function cancelDirectChallenge(uint gameId) external {
+        (bool found, address opponent) = removeDirectChallenge(
+            msg.sender,
+            gameId
+        );
+        if (!found) {
+            revert ErrorGameNotFound();
+        }
+        (found, opponent) = removeDirectChallenge(opponent, gameId);
+        assert(found);
+
+        emit ChallengeCanceled(gameId);
     }
 
     // UTILITY
@@ -252,5 +178,55 @@ contract TicTacToeLobby {
     /// @return The unique game id
     function nextGameId() private returns (uint) {
         return _id++;
+    }
+
+    /// @notice Accept the challenge and start the game
+    /// @dev It ensures that `msg.sender` is the taker, or taker is not set
+    /// @param game The challenge game
+    function acceptChallenge(ChallengeGame memory game) private {
+        if (game.taker != address(0) && game.taker != msg.sender) {
+            revert ErrorNotAllowed();
+        }
+        if (game.makerIsX) {
+            ticTacToe.startGame(game.gameId, game.maker, msg.sender);
+        } else {
+            ticTacToe.startGame(game.gameId, msg.sender, game.maker);
+        }
+        emit ChallengeAccepted(game.gameId);
+    }
+
+    /// @notice Removes challenge at the given index from a list
+    /// @dev It removes it by replacing it with the last element
+    /// @param challenges The list of challenges
+    /// @param index The index to remove from
+    function removeFromList(
+        ChallengeGame[] storage challenges,
+        uint index
+    ) private {
+        assert(index < challenges.length);
+        challenges[index] = challenges[challenges.length - 1];
+        challenges.pop();
+    }
+
+    /// @notice Removes the direct challenge
+    /// @param player One of the players in the direct challenge
+    /// @param gameId The id of the game
+    /// @return found Whether the game was found
+    /// @return opponent The opponent of the game
+    function removeDirectChallenge(
+        address player,
+        uint gameId
+    ) private returns (bool found, address opponent) {
+        ChallengeGame[] storage challenges = directChallenges[player];
+        for (uint i = 0; i < challenges.length; i++) {
+            if (challenges[i].gameId == gameId) {
+                found = true;
+                opponent = challenges[i].maker == player
+                    ? challenges[i].taker
+                    : challenges[i].maker;
+                removeFromList(challenges, i);
+                return (found, opponent);
+            }
+        }
     }
 }

@@ -10,6 +10,8 @@ library TicTacToeEngine {
     /// @notice When invalid move is attempted
     error ErrorInvalidMove();
 
+    /// @notice Emmited on every game update
+    event GameUpdated(uint gameId);
     /// @notice Emitted when game starts
     event GameStarted(uint gameId);
     /// @notice Emitted when game finishes
@@ -29,6 +31,7 @@ library TicTacToeEngine {
         gameState.playerO = playerO;
         gameState.phase = GamePhase.InProgress;
         emit GameStarted(gameId);
+        emit GameUpdated(gameId);
     }
 
     /// @notice Plays the next move at the given coordinates and updates the state
@@ -55,6 +58,7 @@ library TicTacToeEngine {
             gameState.result = GameResult.Draw;
             emit GameFinished(gameState.gameId, gameState.result);
         }
+        emit GameUpdated(gameState.gameId);
     }
 
     function currentPlayerIsX(

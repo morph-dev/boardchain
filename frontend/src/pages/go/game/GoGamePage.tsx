@@ -1,8 +1,7 @@
 import { Box, Button, HStack, Text, VStack, useToast } from '@chakra-ui/react';
 import { useCallback, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { isAddress } from 'viem';
-import { useAccount, useChainId } from 'wagmi';
+import { useAccount } from 'wagmi';
 import { prepareWriteContract, writeContract } from 'wagmi/actions';
 import {
   goGameConfig,
@@ -13,13 +12,14 @@ import {
   useGoGameScoringAcceptedEvent,
   useGoGameStonePlayedEvent,
 } from '../../../generated/blockchain';
+import { useAppContext } from '../../../providers/AppContext';
 import { BoardState, Coordinates, GamePhase, Player, ScoringBoardState } from '../types';
 import GoBoard from './../components/board/GoBoard';
 
 export default function GoGamePage() {
   const { gameId: gameIdString } = useParams();
   const { address } = useAccount();
-  const chainId = useChainId();
+  const { chainId } = useAppContext();
 
   const toast = useToast({ status: 'error', isClosable: true });
 
@@ -34,6 +34,7 @@ export default function GoGamePage() {
     refetch: refetchGameState,
   } = useGoGameGetGameState({
     args: [gameId],
+    chainId: chainId,
   });
 
   const listenerConfig = {
@@ -42,6 +43,7 @@ export default function GoGamePage() {
         refetchGameState();
       }
     },
+    chainId: chainId,
   } as const;
 
   useGoGameStonePlayedEvent(listenerConfig);
@@ -49,14 +51,6 @@ export default function GoGamePage() {
   useGoGameMarkedDeadGroupEvent(listenerConfig);
   useGoGameMarkedAliveGroupEvent(listenerConfig);
   useGoGameScoringAcceptedEvent(listenerConfig);
-
-  const goGameAddress = useMemo(
-    () =>
-      chainId in goGameConfig.address
-        ? goGameConfig.address[chainId as keyof typeof goGameConfig.address]
-        : '',
-    [chainId]
-  );
 
   const canPlay = useMemo(
     () =>
@@ -103,15 +97,9 @@ export default function GoGamePage() {
         return;
       }
 
-      if (!isAddress(goGameAddress)) {
-        toast({
-          title: 'Unknown contract address!',
-          description: 'You are maybe on the wrong chain.',
-        });
-        return;
-      }
       const config = prepareWriteContract({
-        address: goGameAddress,
+        address: goGameConfig.address[chainId],
+        chainId: chainId,
         abi: goGameConfig.abi,
         functionName: 'playStone',
         args: [gameId, c.x, c.y],
@@ -126,7 +114,7 @@ export default function GoGamePage() {
           setPendingMove(null);
         });
     },
-    [canPlay, pendingAction, gameState, goGameAddress, gameId, toast]
+    [canPlay, pendingAction, gameState, chainId, gameId, toast]
   );
 
   const onMarkStones = useCallback(
@@ -144,15 +132,9 @@ export default function GoGamePage() {
         return;
       }
 
-      if (!isAddress(goGameAddress)) {
-        toast({
-          title: 'Unknown contract address!',
-          description: 'You are maybe on the wrong chain.',
-        });
-        return;
-      }
       const config = prepareWriteContract({
-        address: goGameAddress,
+        address: goGameConfig.address[chainId],
+        chainId: chainId,
         abi: goGameConfig.abi,
         functionName: 'markGroup',
         args: [
@@ -170,7 +152,7 @@ export default function GoGamePage() {
           setPendingAction(false);
         });
     },
-    [canScore, gameId, gameState, goGameAddress, pendingAction, toast]
+    [canScore, chainId, gameId, gameState, pendingAction, toast]
   );
 
   const onClick = useCallback(
@@ -194,15 +176,9 @@ export default function GoGamePage() {
       return;
     }
 
-    if (!isAddress(goGameAddress)) {
-      toast({
-        title: 'Unknown contract address!',
-        description: 'You are maybe on the wrong chain.',
-      });
-      return;
-    }
     const config = prepareWriteContract({
-      address: goGameAddress,
+      address: goGameConfig.address[chainId],
+      chainId: chainId,
       abi: goGameConfig.abi,
       functionName: 'pass',
       args: [gameId],
@@ -212,7 +188,7 @@ export default function GoGamePage() {
       .then(writeContract)
       .catch(() => toast({ title: 'Error passing!' }))
       .finally(() => setPendingAction(false));
-  }, [gameId, goGameAddress, pendingAction, canPlay, toast]);
+  }, [canPlay, pendingAction, chainId, gameId, toast]);
 
   const acceptScoring = useCallback(() => {
     // Exit it is not players turn
@@ -224,15 +200,9 @@ export default function GoGamePage() {
       return;
     }
 
-    if (!isAddress(goGameAddress)) {
-      toast({
-        title: 'Unknown contract address!',
-        description: 'You are maybe on the wrong chain.',
-      });
-      return;
-    }
     const config = prepareWriteContract({
-      address: goGameAddress,
+      address: goGameConfig.address[chainId],
+      chainId: chainId,
       abi: goGameConfig.abi,
       functionName: 'acceptScoring',
       args: [gameId],
@@ -242,7 +212,7 @@ export default function GoGamePage() {
       .then(writeContract)
       .catch(() => toast({ title: 'Error accepting scorring!' }))
       .finally(() => setPendingAction(false));
-  }, [canScore, gameId, goGameAddress, pendingAction, toast]);
+  }, [canScore, chainId, gameId, pendingAction, toast]);
 
   if (
     !gameId ||
@@ -263,7 +233,7 @@ export default function GoGamePage() {
       <VStack>
         <VStack align="stretch">
           <HStack>
-            <h1>Loading!</h1>
+            <h1>Loading! {gameStateStatus}</h1>
           </HStack>
         </VStack>
       </VStack>

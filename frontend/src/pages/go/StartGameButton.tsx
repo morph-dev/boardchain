@@ -19,14 +19,16 @@ import {
 } from '@chakra-ui/react';
 import { useCallback, useState } from 'react';
 import { isAddress } from 'viem';
-import { useAccount, useChainId } from 'wagmi';
-import { goGameConfig } from '../../generated/blockchain';
+import { useAccount } from 'wagmi';
 import { prepareWriteContract, writeContract } from 'wagmi/actions';
+import { goGameConfig } from '../../generated/blockchain';
+import { useAppContext } from '../../providers/AppContext';
 
 export function StartGameButton() {
   const toast = useToast({ status: 'error', isClosable: true });
 
-  const chainId = useChainId();
+  const { chainId } = useAppContext();
+
   const { address: walletAddress, isConnected } = useAccount();
 
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -62,20 +64,9 @@ export function StartGameButton() {
       return;
     }
 
-    const goGameAddress =
-      chainId in goGameConfig.address
-        ? goGameConfig.address[chainId as keyof typeof goGameConfig.address]
-        : '';
-    if (!isAddress(goGameAddress)) {
-      toast({
-        title: 'Unknown contract address!',
-        description: 'You are maybe on the wrong chain.',
-      });
-      return;
-    }
-
     const config = prepareWriteContract({
-      address: goGameAddress,
+      address: goGameConfig.address[chainId],
+      chainId: chainId,
       abi: goGameConfig.abi,
       functionName: 'startGame',
       args: [
@@ -92,7 +83,7 @@ export function StartGameButton() {
       error: { title: 'Error starting game!' },
       loading: { title: 'Starting game' },
     });
-  }, [toast, chainId, walletAddress, opponent, isBlack, boardSize, handicap]);
+  }, [walletAddress, opponent, chainId, isBlack, boardSize, handicap, toast]);
 
   if (boardSize < 10 && handicap > 5) {
     setHandicap(0);

@@ -10,14 +10,13 @@ const rowToString = (row: bigint[]) => row.map(cellToString).join('│');
 const boardToString = (board: bigint[][]) => board.map(rowToString).join('\n───┼───┼───\n');
 
 async function printGame(ticTacToe: TicTacToe, gameId: bigint) {
-  const summary = await ticTacToe.gameSummary(gameId);
+  const game = await ticTacToe.game(gameId);
   console.log('GameId:', gameId.toString(16));
-  console.log('Phase:', summary.phase);
-  if (summary.phase == 2n) {
-    console.log('Result:', summary.result);
+  console.log('Phase:', game.phase);
+  if (game.phase == 2n) {
+    console.log('Result:', game.result);
   }
-  const board = await ticTacToe.board(gameId);
-  console.log(boardToString(board));
+  console.log(boardToString(game.board));
 }
 
 async function startGame(
@@ -28,13 +27,13 @@ async function startGame(
 ): Promise<bigint> {
   const event = await lobby
     .connect(playerX)
-    .proposeChallenge(true, playerO.address)
+    .createChallenge(true, playerO.address)
     .then((tx) => getEvent(tx, 'ChallengeCreated'));
   const gameId = event?.args.getValue('gameId') as bigint;
 
   await lobby
     .connect(playerO)
-    .acceptChallenge(gameId)
+    .acceptDirectChallenge(gameId)
     .then((tx) => tx.wait());
 
   await printGame(ticTacToe, gameId);
@@ -60,7 +59,7 @@ async function main() {
   const [player1, player2] = await ethers.getSigners();
 
   const [lobby, ticTacToe] = await deployTicTacToe();
-  lobby.connect(player1).proposeChallenge(true, player2);
+  lobby.connect(player1).createChallenge(true, player2);
 
   const gameId = await startGame(lobby, ticTacToe, player1, player2);
 

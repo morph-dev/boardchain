@@ -3,36 +3,33 @@ import { useCallback } from 'react';
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import { elliptAddress } from '../../utils/textUtils';
 import Chain from './Chain';
+import { useErrorHandler } from '../../hooks/useErrorHandler';
 
 export default function Account() {
-  const toast = useToast();
-
   const { address, isConnected } = useAccount();
-  const { connectAsync, connectors, isLoading: connectIsLoading } = useConnect();
+  const { connectAsync, connectors, isLoading: isConnecting } = useConnect();
   const { disconnectAsync } = useDisconnect();
 
-  const errorHandler = useCallback(
-    (title: string) => {
-      return (error: Error) => {
-        toast({
-          title,
-          description: error.message,
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-        });
-      };
-    },
-    [toast]
-  );
+  const errorHandler = useErrorHandler();
+  const toast = useToast();
+
+  const onConnectClick = useCallback(() => {
+    const connector = connectors.find((conn) => conn.ready);
+    if (!connector) {
+      toast({
+        title: 'Cannot connect',
+        description: 'Wallet connector not found',
+        status: 'error',
+        isClosable: true,
+      });
+      return;
+    }
+    connectAsync({ connector }).catch(errorHandler('Connecting failed!'));
+  }, [connectAsync, connectors, errorHandler, toast]);
 
   if (!isConnected) {
-    const connector = connectors[0];
     return (
-      <Button
-        isLoading={connectIsLoading}
-        onClick={() => connectAsync({ connector }).catch(errorHandler('Connection failed!'))}
-      >
+      <Button isLoading={isConnecting} onClick={onConnectClick}>
         Connect
       </Button>
     );
@@ -42,7 +39,7 @@ export default function Account() {
     <HStack>
       {address ? <Text fontFamily="mono">{elliptAddress(address)}</Text> : null}
       <Chain />
-      <Button onClick={() => disconnectAsync().catch(errorHandler('Disconnection failed!'))}>
+      <Button onClick={() => disconnectAsync().catch(errorHandler('Disconnecting failed!'))}>
         Disconnect
       </Button>
     </HStack>

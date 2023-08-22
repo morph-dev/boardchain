@@ -4,22 +4,6 @@ pragma solidity ^0.8.21;
 import "./TicTacToeEngine.sol";
 import "./TicTacToeTypes.sol";
 
-/// @title The structure giving the summary of a game
-struct GameSummary {
-    /// @notice The unique game id
-    uint gameId;
-    /// @notice The addresses of player X
-    address playerX;
-    /// @notice The addresses of player O
-    address playerO;
-    /// @notice The current phase of the game
-    GamePhase phase;
-    /// @notice The result of the game, if finished
-    GameResult result;
-    /// @notice The number of moves played
-    uint8 numberOfMoves;
-}
-
 /// @title Tha main contract for playing the TicTacToe
 contract TicTacToe {
     using TicTacToeEngine for GameState;
@@ -35,7 +19,7 @@ contract TicTacToe {
     address public immutable lobby;
 
     /// @notice The list of all game ids
-    uint[] public gameId;
+    uint[] private gameId;
 
     /// @notice The collection of games, accesible with gameId
     mapping(uint => GameState) private games;
@@ -90,22 +74,15 @@ contract TicTacToe {
         return gameId.length;
     }
 
-    function gameSummary(uint id) public view returns (GameSummary memory) {
-        GameState storage state = games[id];
-        return
-            GameSummary(
-                id,
-                state.playerX,
-                state.playerO,
-                state.phase,
-                state.result,
-                state.numberOfMoves
-            );
+    function gameIdByIndex(uint index) public view returns (uint) {
+        return gameId[index];
     }
 
-    function board(
-        uint id
-    ) public view returns (BoardState[BOARD_SIZE][BOARD_SIZE] memory) {
-        return games[id].board;
+    function gameByIndex(uint index) public view returns (GameState memory) {
+        return games[gameId[index]];
+    }
+
+    function game(uint id) public view returns (GameState memory) {
+        return games[id];
     }
 }
