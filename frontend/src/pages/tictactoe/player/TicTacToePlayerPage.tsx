@@ -1,11 +1,27 @@
-import { Text } from '@chakra-ui/react';
+import { HStack, Text, VStack } from '@chakra-ui/react';
 import { useParams } from 'react-router-dom';
+import { isAddress } from 'viem';
+import AddressWithCopy from '../../../components/AddressWithCopy';
+import GameList from '../components/gamelist/GameList';
 
 export default function TicTacToePlayerPage() {
   const { playerAddress } = useParams();
+
+  if (!playerAddress || !isAddress(playerAddress)) {
+    return (
+      <VStack>
+        <Text fontSize="lg">Player address not valid</Text>
+      </VStack>
+    );
+  }
+
   return (
-    <>
-      <Text>{playerAddress}</Text>
-    </>
+    <VStack>
+      <HStack fontSize="xl">
+        <Text>Player:</Text>
+        <AddressWithCopy address={playerAddress} copyIconSize="sm" showMe />
+      </HStack>
+      <GameList address={playerAddress} />
+    </VStack>
   );
 }

@@ -1,9 +1,12 @@
-import { Spinner, Text, VStack } from '@chakra-ui/react';
+import { Flex, Spacer, Spinner, Text, VStack } from '@chakra-ui/react';
 import { PropsWithChildren } from 'react';
 import { useParams } from 'react-router-dom';
-import { useTicTacToeGame } from '../../../generated/blockchain';
+import AddressWithCopy from '../../../components/AddressWithCopy';
+import { useTicTacToeGame, useTicTacToeGameUpdatedEvent } from '../../../generated/blockchain';
 import { useAppContext } from '../../../providers/AppContext';
-import { bigintToString } from '../../../utils/textUtils';
+import GameStatus from '../components/GameStatus';
+import { OSymbol, XSymbol } from '../components/Symbols';
+import InteractiveBoard from '../components/board/InteractiveBoard';
 import { GamePhase } from '../types';
 
 function parseGameId(gameIdString: string | undefined): bigint | null {
@@ -15,7 +18,7 @@ function parseGameId(gameIdString: string | undefined): bigint | null {
 }
 
 function ErrorMessage({ children }: PropsWithChildren) {
-  return <Text fontSize="xl">{children}</Text>;
+  return <Text fontSize="lg">{children}</Text>;
 }
 
 export default function TicTacToeGamePage() {
@@ -33,9 +36,22 @@ export default function TicTacToeGamePage() {
 function PageWithGameId({ gameId }: { gameId: bigint }) {
   const { chainId } = useAppContext();
 
-  const { data: game, status: gameStatus } = useTicTacToeGame({
+  const {
+    data: game,
+    status: gameStatus,
+    refetch: gameRefetch,
+  } = useTicTacToeGame({
     chainId: chainId,
     args: [gameId],
+  });
+
+  useTicTacToeGameUpdatedEvent({
+    chainId: chainId,
+    listener: (logs) => {
+      if (logs.some((log) => log.args.gameId === gameId)) {
+        gameRefetch();
+      }
+    },
   });
 
   if (gameStatus === 'loading') {
@@ -56,9 +72,18 @@ function PageWithGameId({ gameId }: { gameId: bigint }) {
   }
 
   return (
-    <>
-      <ErrorMessage>Not implemented</ErrorMessage>
-      <Text>{bigintToString(gameId)}</Text>
-    </>
+    <VStack w="full" h="full">
+      <Flex w="full" maxW="500px" minW="100px">
+        <XSymbol />
+        <AddressWithCopy address={game.playerX} copyIconSize="sm" showMe />
+        <Spacer />
+        <OSymbol />
+        <AddressWithCopy address={game.playerO} copyIconSize="sm" showMe />
+      </Flex>
+
+      <InteractiveBoard game={game} />
+
+      <GameStatus game={game} fontSize="4xl" />
+    </VStack>
   );
 }

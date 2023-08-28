@@ -17,6 +17,7 @@ import TicTacToeLobbyPage from './pages/tictactoe/lobby/TicTacToeLobbyPage';
 import TicTacToePlayerPage from './pages/tictactoe/player/TicTacToePlayerPage';
 import AppContextProvider from './providers/AppContextProvider';
 import WagmiProvider from './providers/WagmiProvider';
+import { theme } from './theme';
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -42,7 +43,7 @@ function AppLayout() {
   return (
     <VStack align="stretch" h="100vh" spacing="2" p="2">
       <TopBar />
-      <VStack>
+      <VStack h="full">
         <AppContextProvider>
           <Outlet />
         </AppContextProvider>
@@ -53,7 +54,7 @@ function AppLayout() {
 
 export default function App() {
   return (
-    <ChakraProvider>
+    <ChakraProvider theme={theme}>
       <WagmiProvider>
         <RouterProvider router={router} />
       </WagmiProvider>

@@ -85,4 +85,15 @@ contract TicTacToe {
     function game(uint id) public view returns (GameState memory) {
         return games[id];
     }
+
+    function allPlayerGames(
+        address player
+    ) public view returns (GameState[] memory) {
+        GameState[] memory result = new GameState[](playerGames[player].length);
+
+        for (uint i = 0; i < result.length; i++) {
+            result[i] = games[playerGames[player][i]];
+        }
+        return result;
+    }
 }

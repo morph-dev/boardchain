@@ -25,6 +25,10 @@ export default function ChallengesTable({
   showTaker = true,
   ...props
 }: ChallengesTableProps) {
+  if (challenges.length === 0) {
+    return <></>;
+  }
+
   return (
     <TableContainer {...props}>
       <Table>

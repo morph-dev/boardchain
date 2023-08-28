@@ -7,6 +7,7 @@ import { ticTacToeLobbyABI, ticTacToeLobbyAddress } from '../../../../generated/
 import { useErrorHandler } from '../../../../hooks/useErrorHandler';
 import { useAppContext } from '../../../../providers/AppContext';
 import { ChallengeGame } from '../../types';
+import { OSymbol, XSymbol } from '../Symbols';
 
 export interface PlayerCellProps extends TableCellProps {
   address: Address;
@@ -14,18 +15,12 @@ export interface PlayerCellProps extends TableCellProps {
 }
 
 function PlayerCell({ address, isX, ...props }: PlayerCellProps) {
-  const { userAddress } = useAppContext();
-
-  const playOrder = `(plays ${isX ? 'first' : 'second'})`;
   return (
     <Td {...props}>
       <HStack gap={0}>
-        {userAddress === address ? (
-          <Text>me</Text>
-        ) : (
-          <AddressWithCopy address={address} copyIconSize="sm" />
-        )}
-        <Text ml={0.5}>{playOrder}</Text>
+        <AddressWithCopy address={address} copyIconSize="sm" showMe />
+        <Text>- plays</Text>
+        {isX ? <XSymbol /> : <OSymbol />}
       </HStack>
     </Td>
   );
