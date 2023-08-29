@@ -1,6 +1,6 @@
 import { ethers } from 'hardhat';
 import { TicTacToeLobby, TicTacToe } from '../typechain-types/tictactoe';
-import { GoGame } from '../typechain-types/v0';
+import { GoLobby, GoGame } from '../typechain-types/';
 
 export async function giveEther(addresses: string[]): Promise<void> {
   const [owner] = await ethers.getSigners();
@@ -25,8 +25,10 @@ export async function deployTicTacToe(): Promise<[TicTacToeLobby, TicTacToe]> {
   return [lobby, ticTacToe];
 }
 
-export async function deployGo(): Promise<GoGame> {
-  const go = await ethers.deployContract('GoGame').then((go) => go.waitForDeployment());
+export async function deployGo(): Promise<[GoLobby, GoGame]> {
+  const lobby = await ethers.deployContract('GoLobby').then((lobby) => lobby.waitForDeployment());
+  const go = await ethers.getContractAt('GoGame', await lobby.goGame());
+  console.log('GoLobby deployed:\n\t', await lobby.getAddress());
   console.log('GoGame deployed:\n\t', await go.getAddress());
-  return go;
+  return [lobby, go];
 }

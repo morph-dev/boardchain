@@ -4,6 +4,10 @@ pragma solidity ^0.8.21;
 import "./GoEngine.sol";
 import "./GoTypes.sol";
 
+/// @notice Thrown when somebody other than `Lobby` is trying to start the
+/// game
+error ErrorNotLobby();
+
 /// Action is allowed only by player.
 error ErrorNotPlayer();
 
@@ -17,19 +21,42 @@ error ErrorNotActive();
 error ErrorWrongPhase(GamePhase gamePhase, GamePhase expectedPhase);
 
 contract GoGame {
+    /// @notice Emmited on every game update
+    event GameUpdated(uint gameId);
+
+    /// @notice Emitted when game starts
     event GameStarted(uint gameId, address black, address white);
+    /// @notice Emitted when game finishes
     event GameFinished(uint gameId, GameResult result);
+    /// @notice Emitted when game changes phase
     event GamePhaseChanged(uint gameId, GamePhase previous, GamePhase current);
 
+    /// @notice Emitted when player passes
     event Pass(uint gameId, address player);
+    /// @notice Emitted when player places a stone
     event StonePlayed(uint gameId, address player, uint8 x, uint8 y);
+    /// @notice Emitted when player marks group as dead
     event MarkedDeadGroup(uint gameId, address player, uint8 x, uint8 y);
+    /// @notice Emitted when player marks group as alive
     event MarkedAliveGroup(uint gameId, address player, uint8 x, uint8 y);
+    /// @notice Emitted when player accepts current scoring
     event ScoringAccepted(uint gameId, address player);
 
+    /// @notice The list of all game ids
+    uint[] private allGameId;
+
+    /// @notice The collection of games, accesible with gameId
     mapping(uint => GameFullState) games;
 
+    /// @notice The collection of games, accessible by player address
     mapping(address => uint[]) public playerGames;
+
+    /// @notice The address of a Lobby contract
+    address public immutable lobby;
+
+    constructor(address lobby_) {
+        lobby = lobby_;
+    }
 
     // VIEWS
 
@@ -39,37 +66,32 @@ contract GoGame {
         return games[gameId];
     }
 
+    function allGames() public view returns (GameSummary[] memory) {
+        return createSummaries(allGameId);
+    }
+
     function allPlayerGames(
         address player
-    ) public view returns (uint[] memory) {
-        return playerGames[player];
+    ) public view returns (GameSummary[] memory) {
+        return createSummaries(playerGames[player]);
     }
 
     // EXTERNAL FUNCTIONS
 
     function startGame(
+        uint gameId,
         address black,
         address white,
         uint8 boardSize,
         int16 komi,
         uint8 handicap
-    ) external returns (uint gameId) {
-        require(black != white, "Players can't be the same.");
-        if (black != msg.sender && white != msg.sender) {
-            revert ErrorNotPlayer();
+    ) external {
+        if (lobby != msg.sender) {
+            revert ErrorNotLobby();
         }
-
-        gameId = (uint)(
-            keccak256(
-                abi.encode(
-                    black,
-                    playerGames[black].length,
-                    white,
-                    playerGames[white].length
-                )
-            )
-        );
         assert(games[gameId].phase == GamePhase.NotCreated);
+
+        allGameId.push(gameId);
 
         playerGames[black].push(gameId);
         playerGames[white].push(gameId);
@@ -86,6 +108,7 @@ contract GoGame {
 
         emit GamePhaseChanged(gameId, GamePhase.NotCreated, GamePhase.Playing);
         emit GameStarted(gameId, black, white);
+        emit GameUpdated(gameId);
     }
 
     function playStone(
@@ -96,6 +119,7 @@ contract GoGame {
         GameFullState storage fullState = games[gameId];
         GoEngine.playStone(fullState, x, y);
         emit StonePlayed(gameId, msg.sender, x, y);
+        emit GameUpdated(gameId);
     }
 
     function pass(
@@ -107,6 +131,7 @@ contract GoGame {
         if (fullState.phase == GamePhase.Scoring) {
             emit GamePhaseChanged(gameId, GamePhase.Playing, GamePhase.Scoring);
         }
+        emit GameUpdated(gameId);
     }
 
     function markGroup(
@@ -121,6 +146,7 @@ contract GoGame {
         } else {
             emit MarkedAliveGroup(gameId, msg.sender, x, y);
         }
+        emit GameUpdated(gameId);
     }
 
     function acceptScoring(
@@ -140,6 +166,7 @@ contract GoGame {
             );
             emit GameFinished(gameId, fullState.result);
         }
+        emit GameUpdated(gameId);
     }
 
     function resign(uint gameId) external inProgress(gameId) {
@@ -155,6 +182,7 @@ contract GoGame {
             ? GameResult(Result.WhiteWin, "W+R")
             : GameResult(Result.BlackWin, "B+R");
         emit GameFinished(gameId, fullState.result);
+        emit GameUpdated(gameId);
     }
 
     // PRIVATE FUNCTIONS - UTILITY
@@ -171,6 +199,26 @@ contract GoGame {
             return Player.White;
         }
         revert ErrorNotPlayer();
+    }
+
+    function createSummaries(
+        uint[] storage gameIds
+    ) private view returns (GameSummary[] memory) {
+        uint count = gameIds.length;
+        GameSummary[] memory summaries = new GameSummary[](count);
+        for (uint i = 0; i < count; i++) {
+            GameFullState storage state = games[gameIds[count - 1 - i]];
+            summaries[i] = GameSummary(
+                state.info,
+                state.players,
+                state.phase,
+                state.result,
+                state.playingState.numberOfMoves,
+                state.playingState.currentPlayer,
+                state.playingState.prisoners
+            );
+        }
+        return summaries;
     }
 
     // MODIFIERS

@@ -1,5 +1,5 @@
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
-import { GoGame } from '../typechain-types/v0';
+import { GoLobby, GoGame } from '../typechain-types/go';
 import { getEvent } from './utils';
 
 const BOARD_VALUE = [' ·', '⚫', '⚪'];
@@ -57,18 +57,21 @@ async function printGame(go: GoGame, gameId: bigint) {
 }
 
 export async function startGame(
-  signer: SignerWithAddress,
+  lobby: GoLobby,
   go: GoGame,
-  blackPlayer: string,
-  whitePlayer: string,
-  boardSize = 9,
-  komi = 6,
-  handicap = 0
+  blackPlayer: SignerWithAddress,
+  whitePlayer: SignerWithAddress,
+  boardSize = 9
 ): Promise<bigint> {
-  const tx = await go
-    .connect(signer)
-    .startGame(blackPlayer, whitePlayer, boardSize, komi, handicap);
-  const gameId = await getEvent(tx, 'GameStarted').then((event) => event?.args.getValue('gameId'));
+  const tx = await lobby.connect(blackPlayer).createChallenge(whitePlayer, boardSize, true);
+  const gameId = await getEvent(tx, 'ChallengeCreated').then(
+    (event) => event?.args.getValue('gameId') as bigint
+  );
+
+  await lobby
+    .connect(whitePlayer)
+    .acceptDirectChallenge(gameId)
+    .then((tx) => tx.wait());
 
   await printGame(go, gameId);
 
