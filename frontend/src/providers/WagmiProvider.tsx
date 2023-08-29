@@ -9,7 +9,7 @@ import { InjectedConnector } from 'wagmi/connectors/injected';
 export default function WagmiProvider({ children }: PropsWithChildren) {
   const { chains, publicClient, webSocketPublicClient } = configureChains(
     Array.from(SUPPORTED_CHAINS),
-    [alchemyProvider({ apiKey: import.meta.env.VITE_ALCHEMY_KEY_GOERLI }), publicProvider()]
+    [alchemyProvider({ apiKey: import.meta.env.VITE_ALCHEMY_KEY_SEPOLIA }), publicProvider()]
   );
 
   const config = createConfig({

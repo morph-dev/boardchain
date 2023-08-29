@@ -1,6 +1,6 @@
-import { goerli, hardhat } from '@wagmi/chains';
+import { sepolia, hardhat } from '@wagmi/chains';
 
-export const SUPPORTED_CHAINS = [hardhat, goerli] as const;
+export const SUPPORTED_CHAINS = [hardhat, sepolia] as const;
 
 export type SupportedChain = (typeof SUPPORTED_CHAINS)[number];
 

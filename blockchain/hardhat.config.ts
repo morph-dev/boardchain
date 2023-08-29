@@ -18,8 +18,8 @@ const config: HardhatUserConfig = {
   },
   defaultNetwork: 'localhost',
   networks: {
-    goerli: {
-      url: process.env.ALCHEMY_GOERLI_URL,
+    sepolia: {
+      url: process.env.ALCHEMY_SEPOLIA_URL,
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC,
         count: 10,
