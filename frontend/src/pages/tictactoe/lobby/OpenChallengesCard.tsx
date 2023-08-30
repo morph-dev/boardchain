@@ -1,13 +1,13 @@
 import { Spinner, Text, VStack } from '@chakra-ui/react';
-import SimpleCard, { SimpleCardProps } from '../../../../components/cards/SimpleCard';
+import SimpleCard, { SimpleCardProps } from '../../../components/cards/SimpleCard';
 import {
   useTicTacToeLobbyAllOpenChallenges,
   useTicTacToeLobbyChallengeAcceptedEvent,
   useTicTacToeLobbyChallengeCanceledEvent,
   useTicTacToeLobbyChallengeCreatedEvent,
-} from '../../../../generated/blockchain';
-import { useAppContext } from '../../../../providers/AppContext';
-import ChallengesTable from './ChallengesTable';
+} from '../../../generated/blockchain';
+import { useAppContext } from '../../../providers/AppContext';
+import TicTacToeChallengesTable from './TicTacToeChallengesTable';
 
 export default function OpenChallengesCard(props: Omit<SimpleCardProps, 'title'>) {
   return (
@@ -20,7 +20,7 @@ export default function OpenChallengesCard(props: Omit<SimpleCardProps, 'title'>
 function Content() {
   const { chainId } = useAppContext();
   const {
-    data: games,
+    data: challenges,
     status,
     refetch,
   } = useTicTacToeLobbyAllOpenChallenges({
@@ -44,7 +44,7 @@ function Content() {
     );
   }
 
-  if (!games) {
+  if (!challenges) {
     return (
       <Text textAlign="center" fontSize="lg">
         Something went wrong!
@@ -52,7 +52,7 @@ function Content() {
     );
   }
 
-  if (games.length == 0) {
+  if (challenges.length == 0) {
     return (
       <Text textAlign="center" fontSize="lg">
         No challenges
@@ -60,9 +60,5 @@ function Content() {
     );
   }
 
-  return (
-    <VStack>
-      <ChallengesTable challenges={games} showTaker={false} />
-    </VStack>
-  );
+  return <TicTacToeChallengesTable challenges={challenges} showMaker />;
 }

@@ -1,38 +1,41 @@
-import { Button, HStack, TableCellProps, TableRowProps, Td, Text, Tr } from '@chakra-ui/react';
+import { HStack, Button, Text } from '@chakra-ui/react';
 import { useCallback, useState } from 'react';
 import { Address, zeroAddress } from 'viem';
 import { prepareWriteContract, writeContract } from 'wagmi/actions';
-import AddressWithCopy from '../../../../components/AddressWithCopy';
-import { ticTacToeLobbyABI, ticTacToeLobbyAddress } from '../../../../generated/blockchain';
-import { useErrorHandler } from '../../../../hooks/useErrorHandler';
-import { useAppContext } from '../../../../providers/AppContext';
-import { ChallengeGame } from '../../types';
-import { OSymbol, XSymbol } from '../Symbols';
+import AddressWithCopy from '../../../components/AddressWithCopy';
+import { ticTacToeLobbyABI, ticTacToeLobbyAddress } from '../../../generated/blockchain';
+import { useErrorHandler } from '../../../hooks/useErrorHandler';
+import { useAppContext } from '../../../providers/AppContext';
+import { OSymbol, XSymbol } from '../components/Symbols';
+import { ChallengeGame } from '../types';
+import { DynamicTableColumnProps } from '../../../components/table/DynamicTableColumn';
 
-export interface PlayerCellProps extends TableCellProps {
-  address: Address;
-  isX: boolean;
+export type ChallengeGameColumnProps = DynamicTableColumnProps<ChallengeGame>;
+
+export function MakerColumn({ item: challenge }: ChallengeGameColumnProps) {
+  return <PlayerColumn address={challenge.maker} isX={challenge.makerIsX} />;
 }
 
-function PlayerCell({ address, isX, ...props }: PlayerCellProps) {
+export function TakerColumn({ item: challenge }: ChallengeGameColumnProps) {
+  return <PlayerColumn address={challenge.taker} isX={!challenge.makerIsX} />;
+}
+
+export type PlayerColumnProps = {
+  address: Address;
+  isX: boolean;
+};
+
+export function PlayerColumn({ address, isX }: PlayerColumnProps) {
   return (
-    <Td {...props}>
-      <HStack gap={0}>
-        <AddressWithCopy address={address} copyIconSize="sm" showMe />
-        <Text>- plays</Text>
-        {isX ? <XSymbol /> : <OSymbol />}
-      </HStack>
-    </Td>
+    <HStack gap={0}>
+      <AddressWithCopy address={address} copyIconSize="sm" showMe />
+      <Text>- plays</Text>
+      {isX ? <XSymbol /> : <OSymbol />}
+    </HStack>
   );
 }
 
-export interface ChallengeRowProps extends TableRowProps {
-  challenge: ChallengeGame;
-  showMaker: boolean;
-  showTaker: boolean;
-}
-
-export default function ChallengeRow({ challenge, showMaker, showTaker }: ChallengeRowProps) {
+export function ActionsColumn({ item: challenge }: ChallengeGameColumnProps) {
   const { chainId, userAddress } = useAppContext();
   const errorHandler = useErrorHandler();
 
@@ -75,23 +78,17 @@ export default function ChallengeRow({ challenge, showMaker, showTaker }: Challe
   const canCancel = challenge.maker === userAddress || challenge.taker === userAddress;
 
   return (
-    <Tr>
-      {showMaker && <PlayerCell address={challenge.maker} isX={challenge.makerIsX} />}
-      {showTaker && <PlayerCell address={challenge.taker} isX={!challenge.makerIsX} />}
-      <Td>
-        <HStack justify="center">
-          {canAccept && (
-            <Button isLoading={pending} onClick={onAccept} colorScheme="green">
-              Accept
-            </Button>
-          )}
-          {canCancel && (
-            <Button isLoading={pending} onClick={onCancel} colorScheme="red">
-              Cancel
-            </Button>
-          )}
-        </HStack>
-      </Td>
-    </Tr>
+    <HStack justify="center">
+      {canAccept && (
+        <Button isLoading={pending} onClick={onAccept} colorScheme="green">
+          Accept
+        </Button>
+      )}
+      {canCancel && (
+        <Button isLoading={pending} onClick={onCancel} colorScheme="red">
+          Cancel
+        </Button>
+      )}
+    </HStack>
   );
 }

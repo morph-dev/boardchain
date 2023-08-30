@@ -1,14 +1,14 @@
 import { Spinner, Text, VStack } from '@chakra-ui/react';
 import { zeroAddress } from 'viem';
-import SimpleCard, { SimpleCardProps } from '../../../../components/cards/SimpleCard';
+import SimpleCard, { SimpleCardProps } from '../../../components/cards/SimpleCard';
 import {
   useTicTacToeLobbyAllDirectChallenges,
   useTicTacToeLobbyChallengeAcceptedEvent,
   useTicTacToeLobbyChallengeCanceledEvent,
   useTicTacToeLobbyChallengeCreatedEvent,
-} from '../../../../generated/blockchain';
-import { useAppContext } from '../../../../providers/AppContext';
-import ChallengesTable from './ChallengesTable';
+} from '../../../generated/blockchain';
+import { useAppContext } from '../../../providers/AppContext';
+import TicTacToeChallengesTable from './TicTacToeChallengesTable';
 
 const CARD_TITLE = 'Direct challenges';
 
@@ -23,7 +23,7 @@ export default function DirectChallengesCard(props: Omit<SimpleCardProps, 'title
 function Content() {
   const { chainId, userAddress } = useAppContext();
   const {
-    data: games,
+    data: challenges,
     status,
     refetch,
   } = useTicTacToeLobbyAllDirectChallenges({
@@ -56,7 +56,7 @@ function Content() {
     );
   }
 
-  if (!games) {
+  if (!challenges) {
     return (
       <Text textAlign="center" fontSize="lg">
         Something went wrong!
@@ -64,7 +64,7 @@ function Content() {
     );
   }
 
-  if (games.length == 0) {
+  if (challenges.length == 0) {
     return (
       <Text textAlign="center" fontSize="lg">
         No challenges
@@ -74,15 +74,15 @@ function Content() {
 
   return (
     <VStack gap={8}>
-      <ChallengesTable
-        challenges={games.filter((game) => game.maker !== userAddress)}
+      <TicTacToeChallengesTable
+        challenges={challenges.filter((challenge) => challenge.maker !== userAddress)}
         title="Me being challenged"
-        showTaker={false}
+        showMaker
       />
-      <ChallengesTable
-        challenges={games.filter((game) => game.maker === userAddress)}
+      <TicTacToeChallengesTable
+        challenges={challenges.filter((challenge) => challenge.maker === userAddress)}
         title="Created by me"
-        showMaker={false}
+        showTaker
       />
     </VStack>
   );

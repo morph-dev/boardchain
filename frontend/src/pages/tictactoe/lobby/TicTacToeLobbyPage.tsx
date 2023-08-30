@@ -1,6 +1,6 @@
 import { VStack } from '@chakra-ui/react';
-import DirectChallengesCard from '../components/challenges/DirectChallengesCard';
-import OpenChallengesCard from '../components/challenges/OpenChallengesCrd';
+import DirectChallengesCard from './DirectChallengesCard';
+import OpenChallengesCard from './OpenChallengesCard';
 
 export default function TicTacToeLobbyPage() {
   return (
