@@ -8,7 +8,9 @@ import {
   createRoutesFromElements,
 } from 'react-router-dom';
 import TopBar from './components/topbar/TopBar';
-import GoAccountPage from './pages/go/account/GoAccountPage';
+import GoLayout from './pages/go/GoLayout';
+import GoPlayerPage from './pages/go/player/GoPlayerPage';
+import GoGamesPage from './pages/go/games/GoGamesPage';
 import GoGamePage from './pages/go/game/GoGamePage';
 import GoLobbyPage from './pages/go/lobby/GoLobbyPage';
 import TicTacToeLayout from './pages/tictactoe/TicTacToeLayout';
@@ -28,10 +30,11 @@ const router = createBrowserRouter(
         <Route path="player/:playerAddress" element={<TicTacToePlayerPage />} />
         <Route index element={<Navigate to="lobby" />} />
       </Route>
-      <Route path="go">
-        <Route path="game/:gameId" loader={() => null} element={<GoGamePage />} />
-        <Route path="account/:address" loader={() => null} element={<GoAccountPage />} />
+      <Route path="go" element={<GoLayout />}>
         <Route path="lobby" element={<GoLobbyPage />} />
+        <Route path="games" element={<GoGamesPage />} />
+        <Route path="game/:gameId" loader={() => null} element={<GoGamePage />} />
+        <Route path="player/:playerAddress" element={<GoPlayerPage />} />
         <Route index element={<Navigate to="lobby" />} />
       </Route>
       <Route index element={<Navigate to="/go" />} />
