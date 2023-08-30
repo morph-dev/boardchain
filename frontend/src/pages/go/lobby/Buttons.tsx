@@ -5,10 +5,10 @@ import { PrepareWriteContractConfig } from 'wagmi/actions';
 import ContractWriteButton from '../../../components/buttons/ContractWriteButton';
 import { goLobbyABI, goLobbyAddress } from '../../../generated/blockchain';
 import { useAppContext } from '../../../providers/AppContext';
-import { ChallengeGame } from '../types';
+import { ChallengeGameType } from '../types';
 
 export interface ChallengeButtonProps extends ButtonProps {
-  challenge: ChallengeGame;
+  challenge: ChallengeGameType;
   onStart: () => void;
   onEnd: () => void;
 }

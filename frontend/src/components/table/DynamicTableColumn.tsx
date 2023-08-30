@@ -20,7 +20,11 @@ export function textColumn<T>(
 ): DynamicTableColumn<T> {
   return {
     header,
-    Component: ({ item }: DynamicTableColumnProps<T>) => <Text {...props}>{textFn(item)}</Text>,
+    Component: ({ item }: DynamicTableColumnProps<T>) => (
+      <Text textAlign="center" {...props}>
+        {textFn(item)}
+      </Text>
+    ),
   };
 }
 

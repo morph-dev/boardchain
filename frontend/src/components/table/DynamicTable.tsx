@@ -13,14 +13,14 @@ import { DynamicTableColumn } from './DynamicTableColumn';
 
 export interface DynamicTableProps<T> extends ChakraProps {
   items: readonly T[];
-  itemKey: keyof T;
+  itemFn: (item: T) => string;
   title?: string;
   columns: DynamicTableColumn<T>[];
 }
 
 export default function DynamicTable<T>({
   items,
-  itemKey,
+  itemFn,
   title,
   columns,
   ...props
@@ -44,7 +44,7 @@ export default function DynamicTable<T>({
         </Thead>
         <Tbody>
           {items.map((item) => (
-            <Tr key={String(item[itemKey])}>
+            <Tr key={itemFn(item)}>
               {columns.map(({ header, Component }) => (
                 <Td key={header}>
                   <Component item={item} />

@@ -46,5 +46,12 @@ export default function TicTacToeChallengesTable({
     return null;
   }
 
-  return <DynamicTable items={challenges} itemKey="gameId" title={title} columns={columns} />;
+  return (
+    <DynamicTable
+      items={challenges}
+      itemFn={(challenge) => challenge.gameId.toString()}
+      title={title}
+      columns={columns}
+    />
+  );
 }

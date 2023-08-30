@@ -1,9 +1,10 @@
-import { Text } from '@chakra-ui/react';
+import { VStack } from '@chakra-ui/react';
+import GamesTable from './GamesTable';
 
 export default function GoGamesPage() {
   return (
-    <>
-      <Text>TODO</Text>
-    </>
+    <VStack>
+      <GamesTable />
+    </VStack>
   );
 }
