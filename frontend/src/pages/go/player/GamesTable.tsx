@@ -72,10 +72,10 @@ export default function GamesTable({ playerAddress }: GamesTableProps) {
         player(game) === Player.Black ? game.players[1] : game.players[0]
       ),
       boardSizeColumn(),
-      statusColumn(),
+      statusColumn(playerAddress),
       actionColumn(),
     ];
-  }, [player]);
+  }, [player, playerAddress]);
 
   if (status === 'loading') {
     return <Spinner />;

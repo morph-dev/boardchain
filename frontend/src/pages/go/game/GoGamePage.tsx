@@ -26,7 +26,7 @@ export default function GoGamePage() {
   const [pendingAction, setPendingAction] = useState(false);
   const [pendingMove, setPendingMove] = useState<Coordinates | null>(null);
 
-  const gameId = BigInt('0x' + gameIdString || 0);
+  const gameId = BigInt(gameIdString || 0);
 
   const {
     data: gameState,
@@ -243,8 +243,6 @@ export default function GoGamePage() {
     toast({ title: 'Something went wrong!' });
     return;
   }
-
-  console.log(gameState.scoringState.board);
 
   return (
     <VStack>
