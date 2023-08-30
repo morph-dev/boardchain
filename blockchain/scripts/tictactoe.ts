@@ -1,8 +1,8 @@
-import { ethers } from 'hardhat';
-import { TicTacToeLobby, TicTacToe } from '../typechain-types/tictactoe';
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
-import { getEvent } from './utils';
+import { ethers } from 'hardhat';
+import { TicTacToe, TicTacToeLobby } from '../typechain-types/tictactoe';
 import { deployTicTacToe } from './setup';
+import { getEventArgsFn } from './utils';
 
 const BOARD_VALUE = ['   ', ' X ', ' O '];
 const cellToString = (value: bigint) => BOARD_VALUE[Number(value)];
@@ -25,11 +25,10 @@ async function startGame(
   playerX: SignerWithAddress,
   playerO: SignerWithAddress
 ): Promise<bigint> {
-  const event = await lobby
+  const { gameId } = await lobby
     .connect(playerX)
     .createChallenge(true, playerO.address)
-    .then((tx) => getEvent(tx, 'ChallengeCreated'));
-  const gameId = event?.args.getValue('gameId') as bigint;
+    .then(getEventArgsFn(lobby.getEvent('ChallengeCreated')));
 
   await lobby
     .connect(playerO)

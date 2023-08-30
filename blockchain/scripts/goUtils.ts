@@ -1,6 +1,6 @@
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 import { GoLobby, GoGame } from '../typechain-types/go';
-import { getEvent } from './utils';
+import { getEventArgsFn } from './utils';
 
 const BOARD_VALUE = [' ·', '⚫', '⚪'];
 //﹢＋·＋⬤◯ ◉○●◎  •◦ ⦿ ⊚ ◎◉○⊙
@@ -59,23 +59,28 @@ async function printGame(go: GoGame, gameId: bigint) {
 export async function startGame(
   lobby: GoLobby,
   go: GoGame,
-  blackPlayer: SignerWithAddress,
-  whitePlayer: SignerWithAddress,
+  player1: SignerWithAddress,
+  player2: SignerWithAddress,
   boardSize = 9
-): Promise<bigint> {
-  const tx = await lobby.connect(blackPlayer).createChallenge(whitePlayer, boardSize, true);
-  const gameId = await getEvent(tx, 'ChallengeCreated').then(
-    (event) => event?.args.getValue('gameId') as bigint
-  );
+): Promise<{ gameId: bigint; blackPlayer: SignerWithAddress; whitePlayer: SignerWithAddress }> {
+  const { gameId } = await lobby
+    .connect(player1)
+    .createChallenge(player2, boardSize)
+    .then(getEventArgsFn(lobby.getEvent('ChallengeCreated')));
 
-  await lobby
-    .connect(whitePlayer)
+  const { black: blackPlayerAddress, white: whitePlayerAddress } = await lobby
+    .connect(player2)
     .acceptDirectChallenge(gameId)
-    .then((tx) => tx.wait());
+    .then(getEventArgsFn(go.getEvent('GameStarted'), go.interface));
+
+  console.log('Players:', blackPlayerAddress, whitePlayerAddress);
+
+  const blackPlayer = blackPlayerAddress === player1.address ? player1 : player2;
+  const whitePlayer = whitePlayerAddress === player1.address ? player1 : player2;
 
   await printGame(go, gameId);
 
-  return gameId;
+  return { gameId, blackPlayer, whitePlayer };
 }
 
 export function playStone(

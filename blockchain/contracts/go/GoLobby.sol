@@ -2,6 +2,7 @@
 pragma solidity ^0.8.21;
 
 import "./GoGame.sol";
+import "../utils/RandomGenerator.sol";
 
 /// @notice The structure describing the details of the challenge
 struct ChallengeGame {
@@ -11,8 +12,6 @@ struct ChallengeGame {
     address maker;
     /// @notice The address of the taker. Could be zero-address, implying open challenge.
     address taker;
-    /// @notice Whether maker is playing as black
-    bool makerIsBlack;
     /// @notice The board size
     uint8 boardSize;
 }
@@ -21,7 +20,7 @@ struct ChallengeGame {
 /// @notice There are two types of challenges. The "open challenge", where
 /// anyone can accept the challenge and the "direct challenge", that only
 /// selected address can accept
-contract GoLobby {
+contract GoLobby is RandomGenerator {
     /// @notice Thrown when game is not found
     error ErrorGameNotFound();
     /// @notice Thrown when non-maker/taker tries to cancel the challenge
@@ -88,12 +87,10 @@ contract GoLobby {
     /// @notice Creates a challenge
     /// @param taker If non-zero then only taker can accept this challenge
     /// @param boardSize The board size
-    /// @param playAsBlack Whether the maker is playing as Black
     /// @return The gameId of the created game
     function createChallenge(
         address taker,
-        uint8 boardSize,
-        bool playAsBlack
+        uint8 boardSize
     ) external returns (uint) {
         uint gameId = nextGameId();
         if (msg.sender == taker) {
@@ -104,7 +101,6 @@ contract GoLobby {
             gameId,
             msg.sender,
             taker,
-            playAsBlack,
             boardSize
         );
 
@@ -200,7 +196,7 @@ contract GoLobby {
         if (game.taker != address(0) && game.taker != msg.sender) {
             revert ErrorNotAllowed();
         }
-        if (game.makerIsBlack) {
+        if (randomBool()) {
             goGame.startGame(
                 game.gameId,
                 game.maker,
