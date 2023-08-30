@@ -45,8 +45,10 @@ export default function DynamicTable<T>({
         <Tbody>
           {items.map((item) => (
             <Tr key={String(item[itemKey])}>
-              {columns.map(({ header, component }) => (
-                <Td key={header}>{component && component({ item })}</Td>
+              {columns.map(({ header, Component }) => (
+                <Td key={header}>
+                  <Component item={item} />
+                </Td>
               ))}
             </Tr>
           ))}

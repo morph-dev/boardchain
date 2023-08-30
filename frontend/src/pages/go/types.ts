@@ -1,3 +1,5 @@
+import { Address } from 'viem';
+
 export enum Player {
   Black,
   White,
@@ -36,4 +38,11 @@ export enum ScoringBoardState {
 export type Coordinates = {
   x: number;
   y: number;
+};
+
+export type ChallengeGame = {
+  gameId: bigint;
+  maker: Address;
+  taker: Address;
+  boardSize: number;
 };

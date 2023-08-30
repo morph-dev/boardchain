@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import DynamicTable from '../../../components/table/DynamicTable';
 import { DynamicTableColumn } from '../../../components/table/DynamicTableColumn';
 import { ChallengeGame } from '../types';
@@ -17,30 +18,33 @@ export default function TicTacToeChallengesTable({
   showMaker,
   showTaker,
 }: TicTacToeChallengesTableProps) {
-  if (challenges.length === 0) {
-    return <></>;
-  }
+  const columns = useMemo<DynamicTableColumn<ChallengeGame>[]>(() => {
+    const columns: DynamicTableColumn<ChallengeGame>[] = [];
+    if (showMaker) {
+      columns.push({
+        header: 'challenger',
+        headerProps: { minW: 80 },
+        Component: MakerColumn,
+      });
+    }
+    if (showTaker) {
+      columns.push({
+        header: 'opponent',
+        headerProps: { minW: 80 },
+        Component: TakerColumn,
+      });
+    }
+    columns.push({
+      header: 'actions',
+      headerProps: { minW: 60 },
+      Component: ActionsColumn,
+    });
+    return columns;
+  }, [showMaker, showTaker]);
 
-  const columns: DynamicTableColumn<ChallengeGame>[] = [];
-  if (showMaker) {
-    columns.push({
-      header: 'challenger',
-      headerProps: { minW: 80 },
-      component: MakerColumn,
-    });
+  if (challenges.length === 0) {
+    return null;
   }
-  if (showTaker) {
-    columns.push({
-      header: 'opponent',
-      headerProps: { minW: 80 },
-      component: TakerColumn,
-    });
-  }
-  columns.push({
-    header: 'actions',
-    headerProps: { minW: 60 },
-    component: ActionsColumn,
-  });
 
   return <DynamicTable items={challenges} itemKey="gameId" title={title} columns={columns} />;
 }

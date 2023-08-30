@@ -1,11 +1,15 @@
 import { VStack } from '@chakra-ui/react';
-import { StartGameButton } from '../StartGameButton';
+import CreateChallengeButton from '../components/buttons/CreateChallengeButton';
+import OpenChallengesCard from './OpenChallengesCard';
+import DirectChallengesCard from './DirectChallengesCard';
 
 export default function GoLobbyPage() {
   return (
     <VStack>
-      <VStack align="stretch">
-        <StartGameButton />
+      <VStack>
+        <CreateChallengeButton />
+        <OpenChallengesCard />
+        <DirectChallengesCard />
       </VStack>
     </VStack>
   );

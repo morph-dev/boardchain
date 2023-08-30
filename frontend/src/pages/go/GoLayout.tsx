@@ -35,6 +35,7 @@ export default function GoLayout() {
   return (
     <>
       <HStack w="full">
+        <NavigationButton to="lobby">Lobby</NavigationButton>
         <NavigationButton to="games">Games</NavigationButton>
         <MyGames />
       </HStack>
