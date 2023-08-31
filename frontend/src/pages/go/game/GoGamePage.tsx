@@ -79,7 +79,10 @@ function PageWithGameId({ gameId }: { gameId: bigint }) {
     return <Spinner color="blue.500" />;
   }
 
-  if (gameStateStatus == 'success' && gameState?.info.gameId !== gameId) {
+  if (
+    gameStateStatus == 'success' &&
+    (gameState?.info.gameId !== gameId || gameState?.phase === GamePhase.NotCreated)
+  ) {
     return <ErrorMessage>Game not found!</ErrorMessage>;
   }
 
