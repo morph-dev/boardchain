@@ -1,12 +1,18 @@
-import { ContractTransactionResponse, EventLog, Interface, Log, UndecodedEventLog } from 'ethers';
+import { ContractTransactionReceipt, EventLog, Interface, Log } from 'ethers';
 import { TypedContractEvent, TypedEventLog } from '../typechain-types/common';
 
+export function printHighGasUsage(tx: ContractTransactionReceipt | null, gasLimit = 200_000) {
+  if (tx && tx.gasUsed > gasLimit) {
+    console.error(`\x1b[33mHigh gas usage: ${(tx.gasUsed / 1000n).toString()} K\x1b[0m`);
+  }
+  return tx;
+}
+
 async function getEvents(
-  tx: ContractTransactionResponse,
+  tx: ContractTransactionReceipt | null,
   ...interfaces: Interface[]
 ): Promise<EventLog[]> {
-  const receipt = await tx.wait();
-  if (!receipt) {
+  if (!tx) {
     return [];
   }
 
@@ -29,11 +35,11 @@ async function getEvents(
     return null;
   };
 
-  return receipt.logs.map(toEventLog).filter((event): event is EventLog => event !== null);
+  return tx.logs.map(toEventLog).filter((event): event is EventLog => event !== null);
 }
 
 export async function getEvent<E extends TypedContractEvent>(
-  tx: ContractTransactionResponse,
+  tx: ContractTransactionReceipt | null,
   contractEvent: E,
   ...interfaces: Interface[]
 ): Promise<TypedEventLog<E> | undefined> {
@@ -43,14 +49,13 @@ export async function getEvent<E extends TypedContractEvent>(
 }
 
 export async function getEventArgs<E extends TypedContractEvent>(
-  tx: ContractTransactionResponse,
+  tx: ContractTransactionReceipt | null,
   contractEvent: E,
   ...interfaces: Interface[]
 ): Promise<TypedEventLog<E>['args']> {
   const event = await getEvent(tx, contractEvent, ...interfaces);
 
   if (!event) {
-    console.log((await tx.wait())?.logs);
     throw Error(`Event "${contractEvent.name}" not found!`);
   }
 
@@ -61,5 +66,5 @@ export function getEventArgsFn<E extends TypedContractEvent>(
   contractEvent: E,
   ...interfaces: Interface[]
 ) {
-  return (tx: ContractTransactionResponse) => getEventArgs(tx, contractEvent, ...interfaces);
+  return (tx: ContractTransactionReceipt | null) => getEventArgs(tx, contractEvent, ...interfaces);
 }
