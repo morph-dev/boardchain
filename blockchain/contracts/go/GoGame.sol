@@ -76,6 +76,17 @@ contract GoGame {
         return createSummaries(playerGames[player]);
     }
 
+    function previewScoringState(
+        uint gameId
+    )
+        public
+        view
+        inPhase(gameId, GamePhase.Scoring)
+        returns (ScoringState memory)
+    {
+        return GoEngine.scoreBoard(games[gameId]);
+    }
+
     // EXTERNAL FUNCTIONS
 
     function startGame(

@@ -256,7 +256,6 @@ library GoEngine {
         if (state.lastMove.isPass) {
             fullState.phase = GamePhase.Scoring;
             markAllGroupsAlive(fullState);
-            scoreBoard(fullState);
         }
 
         state.numberOfMoves++;
@@ -289,11 +288,13 @@ library GoEngine {
         }
     }
 
-    /// @notice Marks group as either dead or alive for scoring purposes
+    /// @notice Marks group as dead or alive for scoring purposes. This
+    /// includes groups reachable by empty spots
     /// @dev If does nothing if group is already marked as such
     /// @param fullState The game's state
     /// @param x The x coordinate of a stone that belongs to the group
     /// @param y The y coordinate of a stone that belongs to the group
+    /// @param dead Whether group should be marked as dead
     function markGroup(
         GameFullState storage fullState,
         uint8 x,
@@ -303,9 +304,8 @@ library GoEngine {
         assert(fullState.phase == GamePhase.Scoring);
 
         BoardState[][] storage board = fullState.board;
-        ScoringBoardState[][] storage scoringBoard = fullState
-            .scoringState
-            .board;
+        ScoringState storage scoringState = fullState.scoringState;
+        ScoringBoardState[][] storage scoringBoard = scoringState.board;
 
         if (board[x][y] == BoardState.Empty) {
             revert ErrorGroupNotFound(x, y);
@@ -324,54 +324,70 @@ library GoEngine {
             x,
             y,
             fullState,
-            GoLibrary.playingBoardState
+            GoLibrary.deadAliveBoardState
         );
+
+        uint16 stonesCount = 0;
+
+        // Mark as dead/alive and count stones
+        uint8 boardSize = fullState.info.boardSize;
+        for (uint8 gx = 0; gx < boardSize; gx++) {
+            for (uint8 gy = 0; gy < boardSize; gy++) {
+                if (
+                    groupSearch.group[gx][gy] &&
+                    board[gx][gy] != BoardState.Empty
+                ) {
+                    scoringBoard[gx][gy] = state;
+                    stonesCount++;
+                }
+            }
+        }
 
         // Update Board prisoners
         Player opponent = board[x][y] == BoardState.Black
             ? Player.White
             : Player.Black;
         if (dead) {
-            fullState.scoringState.boardPrisoners[uint(opponent)] += groupSearch
-                .groupSize;
+            scoringState.boardPrisoners[uint(opponent)] += stonesCount;
         } else {
-            fullState.scoringState.boardPrisoners[uint(opponent)] -= groupSearch
-                .groupSize;
+            scoringState.boardPrisoners[uint(opponent)] -= stonesCount;
         }
 
-        // Mark group and invalidate scoring states of empty spots
-        uint8 boardSize = fullState.info.boardSize;
-        for (uint256 gx = 0; gx < boardSize; gx++) {
-            for (uint256 gy = 0; gy < boardSize; gy++) {
-                if (groupSearch.group[gx][gy]) {
-                    scoringBoard[gx][gy] = state;
-                }
+        // Reset accepted flag
+        scoringState.accepted = [false, false];
+    }
 
-                if (board[gx][gy] == BoardState.Empty) {
-                    scoringBoard[gx][gy] = ScoringBoardState.Unknown;
-                }
-            }
+    function acceptScoring(
+        GameFullState storage fullState,
+        Player player
+    ) internal {
+        ScoringState storage scoringState = fullState.scoringState;
+        scoringState.accepted[uint8(player)] = true;
+
+        if (scoringState.accepted[0] && scoringState.accepted[1]) {
+            fullState.scoringState = scoreBoard(fullState);
+            fullState.phase = GamePhase.Finished;
+            fullState.result = GoEngine.getGameResult(fullState);
         }
-
-        // Score board
-        scoreBoard(fullState);
     }
 
     /// @notice Marks neutral and territory spaces
     /// @dev This function expects all empty spots to be in Unknown scoring
-    /// state, and all stones to be marked as either dead or alive
+    /// state, all stones to be marked as either dead or alive, and
+    /// boardPrisoners to be correct.
     /// @param fullState The game's state
-    function scoreBoard(GameFullState storage fullState) private {
+    function scoreBoard(
+        GameFullState storage fullState
+    ) internal view returns (ScoringState memory scoringState) {
         assert(fullState.phase == GamePhase.Scoring);
 
-        ScoringState storage scoringState = fullState.scoringState;
         BoardState[][] storage board = fullState.board;
-        ScoringBoardState[][] storage scoringBoard = scoringState.board;
+
+        scoringState = fullState.scoringState;
+        ScoringBoardState[][] memory scoringBoard = scoringState.board;
 
         // Reset territory scoring
-        scoringState.territory = [0, 0];
-        // Reset accepted values
-        scoringState.accepted = [false, false];
+        scoringState.territory = [uint16(0), 0];
 
         uint8 boardSize = fullState.info.boardSize;
         for (uint8 x = 0; x < boardSize; x++) {
@@ -420,19 +436,6 @@ library GoEngine {
                     }
                 }
             }
-        }
-    }
-
-    function acceptScoring(
-        GameFullState storage fullState,
-        Player player
-    ) internal {
-        ScoringState storage scoringState = fullState.scoringState;
-        scoringState.accepted[uint8(player)] = true;
-
-        if (scoringState.accepted[0] && scoringState.accepted[1]) {
-            fullState.phase = GamePhase.Finished;
-            fullState.result = GoEngine.getGameResult(fullState);
         }
     }
 

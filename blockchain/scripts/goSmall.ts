@@ -50,7 +50,7 @@ async function main() {
   await markGroup(go, gameId, whitePlayer, 0, 6, true);
 
   await acceptScoring(go, gameId, whitePlayer);
-  await acceptScoring(go, gameId, blackPlayer);
+  // await acceptScoring(go, gameId, blackPlayer);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

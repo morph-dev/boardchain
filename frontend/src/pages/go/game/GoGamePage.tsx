@@ -1,11 +1,18 @@
 import { Flex, Spinner, Text } from '@chakra-ui/react';
-import { PropsWithChildren } from 'react';
+import { PropsWithChildren, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useGoGameGameUpdatedEvent, useGoGameGetGameState } from '../../../generated/blockchain';
+import {
+  goGameABI,
+  goGameAddress,
+  useGoGameGameUpdatedEvent,
+  useGoGameGetGameState,
+} from '../../../generated/blockchain';
 import { useAppContext } from '../../../providers/AppContext';
 import { parseBigint } from '../../../utils/textUtils';
 import InteractiveGoBoard from './../components/board/InteractiveGoBoard';
 import GameStatusBox from './GameStatusBox';
+import { GameFullStateType, GamePhase } from '../types';
+import { readContract } from 'wagmi/actions';
 
 function ErrorMessage({ children }: PropsWithChildren) {
   return <Text fontSize="lg">{children}</Text>;
@@ -29,39 +36,61 @@ function PageWithGameId({ gameId }: { gameId: bigint }) {
   const {
     data: gameState,
     status: gameStateStatus,
-    refetch: refetchGameState,
-  } = useGoGameGetGameState({
-    args: [gameId],
-    chainId: chainId,
-  });
+    refetch: gameStateRefetch,
+  } = useGoGameGetGameState({ chainId: chainId, args: [gameId] });
 
   useGoGameGameUpdatedEvent({
     listener: (logs) => {
       if (logs.some((log) => log.args.gameId === gameId)) {
-        refetchGameState();
+        gameStateRefetch();
       }
     },
   });
 
-  if (
-    gameId === null ||
-    gameStateStatus == 'error' ||
-    (gameStateStatus == 'success' && gameState?.info.gameId !== gameId)
-  ) {
+  const [scorePreview, setScorePreview] = useState<GameFullStateType['scoringState'] | null>(null);
+
+  useEffect(() => {
+    setScorePreview(null);
+    console.log('Updating preview');
+    if (!gameState || gameState.phase !== GamePhase.Scoring) {
+      return;
+    }
+
+    readContract({
+      abi: goGameABI,
+      address: goGameAddress[chainId],
+      chainId: chainId,
+      functionName: 'previewScoringState',
+      args: [gameState.info.gameId],
+    }).then(setScorePreview);
+  }, [chainId, gameState]);
+
+  const renderGameState = useMemo<GameFullStateType | undefined>(() => {
+    if (!gameState || !scorePreview) {
+      return gameState;
+    }
+    return {
+      ...gameState,
+      scoringState: scorePreview,
+    };
+  }, [gameState, scorePreview]);
+
+  if (gameStateStatus === 'loading') {
+    return <Spinner color="blue.500" />;
+  }
+
+  if (gameStateStatus == 'success' && gameState?.info.gameId !== gameId) {
     return <ErrorMessage>Game not found!</ErrorMessage>;
   }
 
-  if (gameStateStatus === 'loading') {
-    return <Spinner color="red.500" />;
-  }
-  if (gameStateStatus !== 'success' || !gameState) {
+  if (gameStateStatus !== 'success' || !renderGameState) {
     return <ErrorMessage>Error! Something went wrong.</ErrorMessage>;
   }
 
   return (
     <Flex w="full" gap={2}>
-      <InteractiveGoBoard flex={1} gameState={gameState} />
-      <GameStatusBox gameState={gameState} />
+      <InteractiveGoBoard flex={1} gameState={renderGameState} />
+      <GameStatusBox gameState={renderGameState} />
     </Flex>
   );
 }

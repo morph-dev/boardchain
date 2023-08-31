@@ -44,11 +44,12 @@ async function printGame(go: GoGame, gameId: bigint) {
     console.log(boardToString(board));
   }
   if (phase == 2n) {
+    const scoringStatePreview = await go.previewScoringState(gameId);
     console.log('ScoringState:');
-    console.log('  accepted:', Array.from(scoringState.accepted));
-    console.log('  boardPrisoners:', Array.from(scoringState.boardPrisoners));
-    console.log('  territory:', Array.from(scoringState.territory));
-    console.log(scoringBoardToString(board, scoringState.board));
+    console.log('  accepted:', Array.from(scoringStatePreview.accepted));
+    console.log('  boardPrisoners:', Array.from(scoringStatePreview.boardPrisoners));
+    console.log('  territory:', Array.from(scoringStatePreview.territory));
+    console.log(scoringBoardToString(board, scoringStatePreview.board));
   }
   if (phase == 3n) {
     console.log('Result', Array.from(result));
