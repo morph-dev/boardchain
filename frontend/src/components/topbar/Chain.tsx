@@ -32,6 +32,10 @@ export default function Chain() {
     [toast]
   );
 
+  if (String(import.meta.env.VITE_SHOW_CHAIN_BUTTON).toLowerCase() !== 'true') {
+    return <></>;
+  }
+
   if (!chain) {
     return <Text>No chain!</Text>;
   }
