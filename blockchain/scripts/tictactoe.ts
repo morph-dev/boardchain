@@ -28,6 +28,7 @@ async function startGame(
   const { gameId } = await lobby
     .connect(playerX)
     .createChallenge(true, playerO.address)
+    .then((tx) => tx.wait())
     .then(getEventArgsFn(lobby.getEvent('ChallengeCreated')));
 
   await lobby

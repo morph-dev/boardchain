@@ -1,6 +1,6 @@
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 import { GoLobby, GoGame } from '../typechain-types/go';
-import { getEventArgsFn } from './utils';
+import { getEventArgsFn, printHighGasUsage } from './utils';
 
 const BOARD_VALUE = [' ·', '⚫', '⚪'];
 //﹢＋·＋⬤◯ ◉○●◎  •◦ ⦿ ⊚ ◎◉○⊙
@@ -67,11 +67,15 @@ export async function startGame(
   const { gameId } = await lobby
     .connect(player1)
     .createChallenge(player2, boardSize)
+    .then((tx) => tx.wait())
+    .then(printHighGasUsage)
     .then(getEventArgsFn(lobby.getEvent('ChallengeCreated')));
 
   const { black: blackPlayerAddress, white: whitePlayerAddress } = await lobby
     .connect(player2)
     .acceptDirectChallenge(gameId)
+    .then((tx) => tx.wait())
+    .then(printHighGasUsage)
     .then(getEventArgsFn(go.getEvent('GameStarted'), go.interface));
 
   console.log('Players:', blackPlayerAddress, whitePlayerAddress);
@@ -95,6 +99,7 @@ export function playStone(
     .connect(player)
     .playStone(gameId, x, y)
     .then((tx) => tx.wait())
+    .then(printHighGasUsage)
     .then(() => printGame(go, gameId));
 }
 
@@ -103,6 +108,7 @@ export function pass(go: GoGame, gameId: bigint, player: SignerWithAddress) {
     .connect(player)
     .pass(gameId)
     .then((tx) => tx.wait())
+    .then(printHighGasUsage)
     .then(() => printGame(go, gameId));
 }
 
@@ -118,6 +124,7 @@ export function markGroup(
     .connect(player)
     .markGroup(gameId, x, y, dead)
     .then((tx) => tx.wait())
+    .then(printHighGasUsage)
     .then(() => printGame(go, gameId));
 }
 
@@ -126,5 +133,6 @@ export function acceptScoring(go: GoGame, gameId: bigint, player: SignerWithAddr
     .connect(player)
     .acceptScoring(gameId)
     .then((tx) => tx.wait())
+    .then(printHighGasUsage)
     .then(() => printGame(go, gameId));
 }

@@ -51,7 +51,6 @@ function PageWithGameId({ gameId }: { gameId: bigint }) {
 
   useEffect(() => {
     setScorePreview(null);
-    console.log('Updating preview');
     if (!gameState || gameState.phase !== GamePhase.Scoring) {
       return;
     }

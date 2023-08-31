@@ -1,7 +1,12 @@
 import { useToast } from '@chakra-ui/react';
 import { useCallback } from 'react';
 import { GetFunctionArgs, InferFunctionName } from 'viem';
-import { PrepareWriteContractConfig, prepareWriteContract, writeContract } from 'wagmi/actions';
+import {
+  PrepareWriteContractConfig,
+  prepareWriteContract,
+  waitForTransaction,
+  writeContract,
+} from 'wagmi/actions';
 import { goGameABI, goGameAddress } from '../../../../generated/blockchain';
 import { useAppContext } from '../../../../providers/AppContext';
 import {
@@ -95,6 +100,9 @@ export function useActions(
           ...config,
         } as PrepareWriteContractConfig)
           .then(writeContract)
+          .then((result) =>
+            waitForTransaction({ chainId: chainId, hash: result.hash, timeout: 60_000 })
+          )
           .finally(() => setPendingAction(null)),
         {
           success: { title: successMessage },
