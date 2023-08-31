@@ -3,7 +3,6 @@ pragma solidity ^0.8.21;
 
 import "./GoTypes.sol";
 import "./GoLibrary.sol";
-import "./String.sol";
 
 /// @title The library responsible for updating the game state
 /// @dev None of the functions check that authorised entity is performing the
@@ -467,21 +466,15 @@ library GoEngine {
             return
                 GameResult(
                     Result.BlackWin,
-                    string.concat(
-                        "B+",
-                        String.uint2str(uint16(blackPoints - whitePoints - 1)),
-                        ".5"
-                    )
+                    ResultReason.Points,
+                    uint16(blackPoints - whitePoints - 1)
                 );
         } else {
             return
                 GameResult(
                     Result.WhiteWin,
-                    string.concat(
-                        "W+",
-                        String.uint2str(uint16(whitePoints - blackPoints)),
-                        ".5"
-                    )
+                    ResultReason.Points,
+                    uint16(whitePoints - blackPoints)
                 );
         }
     }

@@ -4,7 +4,9 @@ import {
   GameFullStateType,
   GamePhase,
   GameSummaryType,
+  Player,
   Result,
+  ResultReason,
 } from '../../types';
 
 export function getGameIdAsString(
@@ -16,14 +18,48 @@ export function getGameIdAsString(
   return game.info.gameId.toString();
 }
 
-export function getGameStatus(game: GameSummaryType | GameFullStateType): string {
+export function getGameStatus(game: GameSummaryType | GameFullStateType, short: boolean): string {
   switch (game.phase) {
-    case GamePhase.Playing:
-      return 'In progress';
+    case GamePhase.Playing: {
+      const currentPlayerIsBlack =
+        ('currentPlayer' in game ? game.currentPlayer : game.playingState.currentPlayer) ===
+        Player.Black;
+
+      let status = `${currentPlayerIsBlack ? 'Black' : 'White'} to play`;
+      if (!short && 'playingState' in game && game.playingState.lastMove.isPass) {
+        status += ` - ${currentPlayerIsBlack ? 'White' : 'Black'} passed`;
+      }
+      return status;
+    }
     case GamePhase.Scoring:
       return 'Scoring';
-    case GamePhase.Finished:
-      return game.result.reason;
+    case GamePhase.Finished: {
+      let player = '';
+      switch (game.result.result) {
+        case Result.BlackWin:
+          player += short ? 'B' : 'Black';
+          break;
+        case Result.WhiteWin:
+          player += short ? 'W' : 'White';
+          break;
+        case Result.Jigo:
+          return 'Jigo';
+        case Result.NoResult:
+          return 'No Result';
+        default:
+          return 'Unknown';
+      }
+      switch (game.result.reason) {
+        case ResultReason.Points:
+          return short
+            ? `${player}+${game.result.pointsDifference}.5`
+            : `${player} wins by ${game.result.pointsDifference}.5 points`;
+        case ResultReason.Resignation:
+          return short ? `${player}+R` : `${player} wins by Resignation`;
+        default:
+          return 'Unknown';
+      }
+    }
     default:
       return 'Unknown';
   }

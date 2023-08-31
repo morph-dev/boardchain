@@ -1,5 +1,6 @@
 import { Button, Flex, Spacer, Text } from '@chakra-ui/react';
-import { GameFullStateType, GamePhase, Player } from '../../types';
+import { GameFullStateType, GamePhase } from '../../types';
+import { getGameStatus } from '../utils/summary';
 
 export type GameStatusProps = {
   gameState: GameFullStateType;
@@ -22,17 +23,10 @@ export default function GameStatus({
   onAcceptScoring,
   onResign,
 }: GameStatusProps) {
-  const playingState = gameState.playingState;
-
   if (gameState.phase === GamePhase.Playing) {
     return (
       <Flex w="full" gap={2} align="center">
-        <Text fontWeight="bold">
-          {playingState.currentPlayer === Player.Black ? 'Black' : 'White'} to play
-          {playingState.numberOfMoves > 0 &&
-            playingState.lastMove.isPass &&
-            ` - ${playingState.currentPlayer === Player.Black ? 'White' : 'Black'} passed`}
-        </Text>
+        <Text fontWeight="bold">{getGameStatus(gameState, false /* =short */)}</Text>
         <Spacer />
         <Button size="sm" isLoading={isPending} isDisabled={!canPass} onClick={onPass}>
           Pass
@@ -47,7 +41,7 @@ export default function GameStatus({
   if (gameState.phase === GamePhase.Scoring) {
     return (
       <Flex w="full" gap={2} align="center">
-        <Text fontWeight="bold">Scoring</Text>
+        <Text fontWeight="bold">{getGameStatus(gameState, false /* =short */)}</Text>
         <Spacer />
         <Button
           size="sm"
@@ -65,7 +59,7 @@ export default function GameStatus({
   }
 
   if (gameState.phase === GamePhase.Finished) {
-    return <Text fontWeight="bold">{gameState.result.reason}</Text>;
+    <Text fontWeight="bold">{getGameStatus(gameState, false /* =short */)}</Text>;
   }
 
   return (

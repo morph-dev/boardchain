@@ -14,9 +14,18 @@ enum Result {
     Jigo
 }
 
+enum ResultReason {
+    Unknown,
+    Points,
+    Resignation
+}
+
 struct GameResult {
     Result result;
-    string reason;
+    ResultReason reason;
+    /// @notice Relevant only in case when reson is Points.
+    /// @dev +0.5 is implied
+    uint16 pointsDifference;
 }
 
 enum BoardState {

@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.21;
 
-import "./GoTypes.sol";
-
-import "hardhat/console.sol";
-
 library String {
     function uint2str(uint n) internal pure returns (string memory) {
         if (n == 0) {

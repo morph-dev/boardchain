@@ -19,10 +19,11 @@ export function statusColumn(player?: Address): DynamicTableColumn<GameSummaryTy
     header: 'Status',
     Component: ({ item: game }: DynamicTableColumnProps<GameSummaryType>) => (
       <Text
+        textAlign="center"
         {...(player && player == getWinner(game) && { textColor: 'result.won' })}
         {...(player && player == getLoser(game) && { textColor: 'result.lost' })}
       >
-        {getGameStatus(game)}
+        {getGameStatus(game, true /* =short */)}
       </Text>
     ),
   };

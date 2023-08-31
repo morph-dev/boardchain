@@ -14,6 +14,12 @@ export enum Result {
   Jigo,
 }
 
+export enum ResultReason {
+  Unknown,
+  Points,
+  Resignation,
+}
+
 export enum BoardState {
   Empty,
   Black,
@@ -43,7 +49,8 @@ export type Coordinates = {
 
 export type GameResultType = {
   result: Result;
-  reason: string;
+  reason: ResultReason;
+  pointsDifference: number;
 };
 
 export type MoveType = {

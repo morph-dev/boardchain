@@ -189,9 +189,11 @@ contract GoGame {
         fullState.phase = GamePhase.Finished;
         emit GamePhaseChanged(gameId, currentPhase, GamePhase.Finished);
 
-        fullState.result = player == Player.Black
-            ? GameResult(Result.WhiteWin, "W+R")
-            : GameResult(Result.BlackWin, "B+R");
+        fullState.result = GameResult(
+            player == Player.Black ? Result.WhiteWin : Result.BlackWin,
+            ResultReason.Resignation,
+            0
+        );
         emit GameFinished(gameId, fullState.result);
         emit GameUpdated(gameId);
     }
