@@ -4,7 +4,7 @@ The project for playing turn based games on the blockchain and the associated fr
 
 The main game is Go, but other games might be added as well (Tic-Tac-Toe, etc.)
 
-## Dev details
+## Developer details
 
 Some overview:
 
