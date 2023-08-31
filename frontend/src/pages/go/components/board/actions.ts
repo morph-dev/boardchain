@@ -70,7 +70,7 @@ export function useActions(
 
   const acceptedScoring =
     canMarkDeadAliveOrAcceptScoring &&
-    !gameState.scoringState.accepted[playerColor === Player.Black ? 0 : 1];
+    gameState.scoringState.accepted[playerColor === Player.Black ? 0 : 1];
 
   const executeAction = useCallback(
     <FN extends string>(
