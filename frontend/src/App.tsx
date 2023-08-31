@@ -24,17 +24,17 @@ import { theme } from './theme';
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<AppLayout />}>
-      <Route path="tictactoe" element={<TicTacToeLayout />}>
-        <Route path="lobby" element={<TicTacToeLobbyPage />} />
-        <Route path="game/:gameId" element={<TicTacToeGamePage />} />
-        <Route path="player/:playerAddress" element={<TicTacToePlayerPage />} />
-        <Route index element={<Navigate to="lobby" />} />
-      </Route>
       <Route path="go" element={<GoLayout />}>
         <Route path="lobby" element={<GoLobbyPage />} />
         <Route path="games" element={<GoGamesPage />} />
         <Route path="game/:gameId" loader={() => null} element={<GoGamePage />} />
         <Route path="player/:playerAddress" element={<GoPlayerPage />} />
+        <Route index element={<Navigate to="lobby" />} />
+      </Route>
+      <Route path="tictactoe" element={<TicTacToeLayout />}>
+        <Route path="lobby" element={<TicTacToeLobbyPage />} />
+        <Route path="game/:gameId" element={<TicTacToeGamePage />} />
+        <Route path="player/:playerAddress" element={<TicTacToePlayerPage />} />
         <Route index element={<Navigate to="lobby" />} />
       </Route>
       <Route index element={<Navigate to="/go" />} />

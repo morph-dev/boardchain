@@ -59,7 +59,7 @@ export default function GameStatus({
   }
 
   if (gameState.phase === GamePhase.Finished) {
-    <Text fontWeight="bold">{getGameStatus(gameState, false /* =short */)}</Text>;
+    return <Text fontWeight="bold">{getGameStatus(gameState, false /* =short */)}</Text>;
   }
 
   return (
