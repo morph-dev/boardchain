@@ -6,7 +6,7 @@
   "scripts": {
     "lint": "eslint .",
     "dev": "vite",
-    "build": "yarn run wagmi && tsc && vite build",
+    "build": "tsc && vite build",
     "preview": "vite preview",
     "wagmi": "wagmi generate"
   },
