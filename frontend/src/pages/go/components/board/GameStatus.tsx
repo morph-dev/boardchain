@@ -6,8 +6,10 @@ export type GameStatusProps = {
   isPending: boolean;
   canPass: boolean;
   canAcceptScoring: boolean;
+  acceptedScoring: boolean;
   onPass: () => void;
   onAcceptScoring: () => void;
+  onResign: () => void;
 };
 
 export default function GameStatus({
@@ -15,18 +17,28 @@ export default function GameStatus({
   isPending,
   canPass,
   canAcceptScoring,
+  acceptedScoring,
   onPass,
   onAcceptScoring,
+  onResign,
 }: GameStatusProps) {
+  const playingState = gameState.playingState;
+
   if (gameState.phase === GamePhase.Playing) {
     return (
-      <Flex w="full" align="center">
+      <Flex w="full" gap={2} align="center">
         <Text fontWeight="bold">
-          {gameState.playingState.currentPlayer === Player.Black ? 'Black' : 'White'} to play
+          {playingState.currentPlayer === Player.Black ? 'Black' : 'White'} to play
+          {playingState.numberOfMoves > 0 &&
+            playingState.lastMove.isPass &&
+            ` - ${playingState.currentPlayer === Player.Black ? 'White' : 'Black'} passed`}
         </Text>
         <Spacer />
         <Button size="sm" isLoading={isPending} isDisabled={!canPass} onClick={onPass}>
           Pass
+        </Button>
+        <Button size="sm" isLoading={isPending} onClick={onResign}>
+          Resign
         </Button>
       </Flex>
     );
@@ -34,16 +46,19 @@ export default function GameStatus({
 
   if (gameState.phase === GamePhase.Scoring) {
     return (
-      <Flex w="full" align="center">
+      <Flex w="full" gap={2} align="center">
         <Text fontWeight="bold">Scoring</Text>
         <Spacer />
         <Button
           size="sm"
           isLoading={isPending}
-          isDisabled={!canAcceptScoring}
+          isDisabled={!canAcceptScoring || acceptedScoring}
           onClick={onAcceptScoring}
         >
-          Accept Score
+          {acceptedScoring ? 'Accepted' : 'Accept Score'}
+        </Button>
+        <Button size="sm" isLoading={isPending} isDisabled={!canAcceptScoring} onClick={onResign}>
+          Resign
         </Button>
       </Flex>
     );

@@ -75,10 +75,10 @@ function PageWithGameId({ gameId }: { gameId: bigint }) {
     <VStack w="full" h="full">
       <Flex w="full" maxW="500px" minW="100px">
         <XSymbol />
-        <AddressWithCopy address={game.playerX} copyIconSize="sm" showMe />
+        <AddressWithCopy address={game.playerX} showMe />
         <Spacer />
         <OSymbol />
-        <AddressWithCopy address={game.playerO} copyIconSize="sm" showMe />
+        <AddressWithCopy address={game.playerO} showMe />
       </Flex>
 
       <InteractiveBoard game={game} />

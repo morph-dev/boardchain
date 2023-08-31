@@ -37,7 +37,7 @@ export default function Account() {
 
   return (
     <HStack>
-      {address && <AddressWithCopy address={address} />}
+      {address && <AddressWithCopy address={address} copyIconProps={{ size: 'md' }} />}
       <Chain />
       <Button onClick={() => disconnectAsync().catch(errorHandler('Disconnecting failed!'))}>
         Disconnect

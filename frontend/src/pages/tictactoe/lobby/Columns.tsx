@@ -28,7 +28,7 @@ export type PlayerColumnProps = {
 export function PlayerColumn({ address, isX }: PlayerColumnProps) {
   return (
     <HStack gap={0}>
-      <AddressWithCopy address={address} copyIconSize="sm" showMe />
+      <AddressWithCopy address={address} showMe />
       <Text>- plays</Text>
       {isX ? <XSymbol /> : <OSymbol />}
     </HStack>

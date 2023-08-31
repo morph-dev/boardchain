@@ -19,7 +19,7 @@ export default function TicTacToePlayerPage() {
     <VStack>
       <HStack fontSize="xl">
         <Text>Player:</Text>
-        <AddressWithCopy address={playerAddress} copyIconSize="sm" showMe />
+        <AddressWithCopy address={playerAddress} copyIconProps={{ size: 'md' }} showMe />
       </HStack>
       <GameList address={playerAddress} />
     </VStack>

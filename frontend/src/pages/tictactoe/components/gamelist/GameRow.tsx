@@ -26,11 +26,7 @@ export default function GameRow({ game, player }: GameRowProps) {
         <Center>{game.playerX === player ? <XSymbol /> : <OSymbol />}</Center>
       </Td>
       <Td>
-        <AddressWithCopy
-          address={game.playerX === player ? game.playerO : game.playerX}
-          copyIconSize="sm"
-          showMe
-        />
+        <AddressWithCopy address={game.playerX === player ? game.playerO : game.playerX} showMe />
       </Td>
       <Td>
         <GameResult game={game} player={player} />

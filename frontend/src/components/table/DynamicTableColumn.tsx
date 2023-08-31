@@ -35,7 +35,7 @@ export function addressColumn<T>(
   return {
     header,
     Component: ({ item }: DynamicTableColumnProps<T>) => (
-      <AddressWithCopy address={addressFn(item)} copyIconSize="sm" showMe />
+      <AddressWithCopy address={addressFn(item)} showMe />
     ),
   };
 }

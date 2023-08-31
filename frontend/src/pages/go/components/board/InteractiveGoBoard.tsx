@@ -1,4 +1,4 @@
-import { ChakraProps, VStack } from '@chakra-ui/react';
+import { Center, ChakraProps, VStack } from '@chakra-ui/react';
 import { useCallback, useMemo, useState } from 'react';
 import { useAppContext } from '../../../../providers/AppContext';
 import { BoardState, Coordinates, GameFullStateType, GamePhase, Player } from '../../types';
@@ -29,10 +29,12 @@ export default function InteractiveGoBoard({ gameState, ...props }: InteractiveG
   const {
     canPlayStoneOrPass,
     canMarkDeadAliveOrAcceptScoring,
+    acceptedScoring,
     onPlayStone,
     onPass,
     onMarkDeadAlive,
     onAcceptScoring,
+    onResign,
   } = useActions(gameState, pendingAction, setPendingAction);
 
   // Dim - pending play stone or can play stone with hover
@@ -86,23 +88,27 @@ export default function InteractiveGoBoard({ gameState, ...props }: InteractiveG
   );
 
   return (
-    <VStack {...props}>
-      <GameStatus
-        gameState={gameState}
-        isPending={pendingAction !== null}
-        canPass={canPlayStoneOrPass}
-        canAcceptScoring={canMarkDeadAliveOrAcceptScoring}
-        onPass={onPass}
-        onAcceptScoring={onAcceptScoring}
-      />
-      <GoBoard
-        gameState={gameState}
-        dim={dim}
-        toogleDeadAlive={toogleDeadAlive}
-        onClick={onClick}
-        onMouseMove={setHover}
-        onMouseLeave={() => setHover(undefined)}
-      />
-    </VStack>
+    <Center {...props}>
+      <VStack w="min">
+        <GameStatus
+          gameState={gameState}
+          isPending={pendingAction !== null}
+          canPass={canPlayStoneOrPass}
+          canAcceptScoring={canMarkDeadAliveOrAcceptScoring}
+          acceptedScoring={acceptedScoring}
+          onPass={onPass}
+          onAcceptScoring={onAcceptScoring}
+          onResign={onResign}
+        />
+        <GoBoard
+          gameState={gameState}
+          dim={dim}
+          toogleDeadAlive={toogleDeadAlive}
+          onClick={onClick}
+          onMouseMove={setHover}
+          onMouseLeave={() => setHover(undefined)}
+        />
+      </VStack>
+    </Center>
   );
 }

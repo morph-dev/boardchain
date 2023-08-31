@@ -18,6 +18,7 @@ export enum ActionType {
   Pass,
   MarkDeadAlive,
   AcceptScoring,
+  Resign,
 }
 
 export type Action =
@@ -30,15 +31,18 @@ export type Action =
       type: ActionType.MarkDeadAlive;
       coordinates: Coordinates;
     }
-  | { type: ActionType.AcceptScoring };
+  | { type: ActionType.AcceptScoring }
+  | { type: ActionType.Resign };
 
 export type Actions = {
   canPlayStoneOrPass: boolean;
   canMarkDeadAliveOrAcceptScoring: boolean;
+  acceptedScoring: boolean;
   onPlayStone: (c: Coordinates) => void;
   onPass: () => void;
   onMarkDeadAlive: (c: Coordinates) => void;
   onAcceptScoring: () => void;
+  onResign: () => void;
 };
 
 export function useActions(
@@ -48,6 +52,8 @@ export function useActions(
 ): Actions {
   const { chainId, userAddress } = useAppContext();
   const toast = useToast();
+
+  const gameId = gameState.info.gameId;
 
   const playerColor =
     userAddress === gameState.players[0]
@@ -61,6 +67,10 @@ export function useActions(
 
   const canMarkDeadAliveOrAcceptScoring =
     gameState.phase === GamePhase.Scoring && playerColor !== null;
+
+  const acceptedScoring =
+    canMarkDeadAliveOrAcceptScoring &&
+    !gameState.scoringState.accepted[playerColor === Player.Black ? 0 : 1];
 
   const executeAction = useCallback(
     <FN extends string>(
@@ -101,10 +111,10 @@ export function useActions(
       executeAction(
         canPlayStoneOrPass && gameState.board[c.x][c.y] === BoardState.Empty,
         { type: ActionType.PlayStone, coordinates: c },
-        { functionName: 'playStone', args: [gameState.info.gameId, c.x, c.y] },
+        { functionName: 'playStone', args: [gameId, c.x, c.y] },
         ['Played', 'Error playing the move', 'Playing']
       ),
-    [canPlayStoneOrPass, gameState.board, gameState.info.gameId, executeAction]
+    [canPlayStoneOrPass, gameState.board, gameId, executeAction]
   );
 
   const onPass = useCallback(
@@ -112,10 +122,10 @@ export function useActions(
       executeAction(
         canPlayStoneOrPass,
         { type: ActionType.Pass },
-        { functionName: 'pass', args: [gameState.info.gameId] },
+        { functionName: 'pass', args: [gameId] },
         ['Passed', 'Error passing', 'Passing']
       ),
-    [canPlayStoneOrPass, gameState.info.gameId, executeAction]
+    [canPlayStoneOrPass, gameId, executeAction]
   );
 
   const onMarkDeadAlive = useCallback(
@@ -126,7 +136,7 @@ export function useActions(
         {
           functionName: 'markGroup',
           args: [
-            gameState.info.gameId,
+            gameId,
             c.x,
             c.y,
             gameState.scoringState.board[c.x][c.y] === ScoringBoardState.Alive,
@@ -137,7 +147,7 @@ export function useActions(
     [
       canMarkDeadAliveOrAcceptScoring,
       gameState.board,
-      gameState.info.gameId,
+      gameId,
       gameState.scoringState.board,
       executeAction,
     ]
@@ -148,18 +158,31 @@ export function useActions(
       executeAction(
         canMarkDeadAliveOrAcceptScoring,
         { type: ActionType.AcceptScoring },
-        { functionName: 'acceptScoring', args: [gameState.info.gameId] },
+        { functionName: 'acceptScoring', args: [gameId] },
         ['Scoring accepted', 'Error accepting the score', 'Accepting the score']
       ),
-    [canMarkDeadAliveOrAcceptScoring, gameState.info.gameId, executeAction]
+    [canMarkDeadAliveOrAcceptScoring, gameId, executeAction]
+  );
+
+  const onResign = useCallback(
+    () =>
+      executeAction(
+        gameState.phase === GamePhase.Playing || gameState.phase === GamePhase.Scoring,
+        { type: ActionType.Resign },
+        { functionName: 'resign', args: [gameId] },
+        ['Resigned', 'Error resigning', 'Resigning']
+      ),
+    [executeAction, gameId, gameState.phase]
   );
 
   return {
     canPlayStoneOrPass,
     canMarkDeadAliveOrAcceptScoring,
+    acceptedScoring,
     onPlayStone,
     onPass,
     onMarkDeadAlive,
     onAcceptScoring,
+    onResign,
   };
 }

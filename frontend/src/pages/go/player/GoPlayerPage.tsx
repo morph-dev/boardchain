@@ -16,7 +16,7 @@ export default function GoPlayerPage() {
   }
   return (
     <VStack>
-      <AddressWithCopy address={playerAddress} showMe />
+      <AddressWithCopy address={playerAddress} copyIconProps={{ size: 'md' }} showMe />
       <GamesTable playerAddress={playerAddress} />
     </VStack>
   );
