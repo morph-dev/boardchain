@@ -14,3 +14,11 @@ export function elliptAddress(address: Address, size = 4) {
 export function bigintToString(x: bigint, asHex = true): string {
   return asHex ? `0x${x.toString(16)}` : x.toString();
 }
+
+export function parseBigint(bigintAsString: string | undefined): bigint | null {
+  try {
+    return bigintAsString ? BigInt(bigintAsString) : null;
+  } catch (_) {
+    return null;
+  }
+}

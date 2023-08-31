@@ -1,4 +1,5 @@
-import { Address } from 'viem';
+import { ReadContractReturnType } from 'viem';
+import { goGameABI, goLobbyABI } from '../../generated/blockchain';
 
 export enum Player {
   Black,
@@ -73,29 +74,11 @@ export type ScoringStateType = {
   board: readonly (readonly ScoringBoardState[])[];
 };
 
-export type GameFullStateType = {
-  info: GameInfoType;
-  players: readonly [Address, Address];
-  phase: GamePhase;
-  result: GameResultType;
-  playingState: PlayingStateType;
-  scoringState: ScoringStateType;
-  board: readonly (readonly BoardState[])[];
-};
+export type GameFullStateType = ReadContractReturnType<typeof goGameABI, 'getGameState'>;
 
-export type GameSummaryType = {
-  info: GameInfoType;
-  players: readonly [Address, Address];
-  phase: GamePhase;
-  result: GameResultType;
-  numberOfMoves: bigint;
-  currentPlayer: Player;
-  prisoners: readonly [number, number];
-};
+export type GameSummaryType = ReadContractReturnType<typeof goGameABI, 'allGames'>[number];
 
-export type ChallengeGameType = {
-  gameId: bigint;
-  maker: Address;
-  taker: Address;
-  boardSize: number;
-};
+export type ChallengeGameType = ReadContractReturnType<
+  typeof goLobbyABI,
+  'allOpenChallenges'
+>[number];
